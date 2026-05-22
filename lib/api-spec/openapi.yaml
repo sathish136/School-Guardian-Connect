@@ -3,13 +3,28 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: School Bus Management System API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: students
+    description: Student management
+  - name: buses
+    description: Bus management
+  - name: routes
+    description: Route management
+  - name: trips
+    description: Trip management
+  - name: scans
+    description: Biometric scan events
+  - name: sms
+    description: SMS logs and gateway configuration
+  - name: dashboard
+    description: Dashboard statistics and activity
+
 paths:
   /healthz:
     get:
@@ -24,13 +39,930 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Students ──────────────────────────────────────────────────────────────
+  /students:
+    get:
+      operationId: listStudents
+      tags: [students]
+      summary: List all students
+      parameters:
+        - name: busId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Student"
+    post:
+      operationId: createStudent
+      tags: [students]
+      summary: Create a student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+
+  /students/{id}:
+    get:
+      operationId: getStudent
+      tags: [students]
+      summary: Get student by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateStudent
+      tags: [students]
+      summary: Update student
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentUpdate"
+      responses:
+        "200":
+          description: Updated student
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+    delete:
+      operationId: deleteStudent
+      tags: [students]
+      summary: Delete student
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Buses ──────────────────────────────────────────────────────────────────
+  /buses:
+    get:
+      operationId: listBuses
+      tags: [buses]
+      summary: List all buses
+      responses:
+        "200":
+          description: List of buses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bus"
+    post:
+      operationId: createBus
+      tags: [buses]
+      summary: Create a bus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bus"
+
+  /buses/{id}:
+    get:
+      operationId: getBus
+      tags: [buses]
+      summary: Get bus by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bus
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bus"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateBus
+      tags: [buses]
+      summary: Update bus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusUpdate"
+      responses:
+        "200":
+          description: Updated bus
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bus"
+    delete:
+      operationId: deleteBus
+      tags: [buses]
+      summary: Delete bus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Routes ─────────────────────────────────────────────────────────────────
+  /routes:
+    get:
+      operationId: listRoutes
+      tags: [routes]
+      summary: List all routes
+      responses:
+        "200":
+          description: List of routes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Route"
+    post:
+      operationId: createRoute
+      tags: [routes]
+      summary: Create a route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Route"
+
+  /routes/{id}:
+    get:
+      operationId: getRoute
+      tags: [routes]
+      summary: Get route by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Route
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Route"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateRoute
+      tags: [routes]
+      summary: Update route
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteUpdate"
+      responses:
+        "200":
+          description: Updated route
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Route"
+    delete:
+      operationId: deleteRoute
+      tags: [routes]
+      summary: Delete route
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Trips ──────────────────────────────────────────────────────────────────
+  /trips:
+    get:
+      operationId: listTrips
+      tags: [trips]
+      summary: List all trips
+      parameters:
+        - name: busId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, completed]
+      responses:
+        "200":
+          description: List of trips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Trip"
+    post:
+      operationId: createTrip
+      tags: [trips]
+      summary: Start a new trip
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripInput"
+      responses:
+        "201":
+          description: Created trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}:
+    get:
+      operationId: getTrip
+      tags: [trips]
+      summary: Get trip by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateTrip
+      tags: [trips]
+      summary: Update trip (e.g. end it)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripUpdate"
+      responses:
+        "200":
+          description: Updated trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}/scans:
+    get:
+      operationId: getTripScans
+      tags: [trips]
+      summary: Get all scans for a trip
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of scan events for the trip
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScanEvent"
+
+  # ── Scans ──────────────────────────────────────────────────────────────────
+  /scans:
+    get:
+      operationId: listScans
+      tags: [scans]
+      summary: List recent scan events
+      parameters:
+        - name: studentId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: List of scan events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScanEvent"
+    post:
+      operationId: recordScan
+      tags: [scans]
+      summary: Record a biometric scan (board or alight)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScanInput"
+      responses:
+        "201":
+          description: Scan recorded and SMS sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanEvent"
+        "400":
+          description: Bad request
+
+  # ── SMS Gateway ────────────────────────────────────────────────────────────
+  /sms-gateway:
+    get:
+      operationId: getSmsGateway
+      tags: [sms]
+      summary: Get SMS gateway configuration
+      responses:
+        "200":
+          description: SMS gateway config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmsGateway"
+        "404":
+          description: Not configured
+    put:
+      operationId: upsertSmsGateway
+      tags: [sms]
+      summary: Create or update SMS gateway configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SmsGatewayInput"
+      responses:
+        "200":
+          description: Updated SMS gateway
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmsGateway"
+
+  /sms-logs:
+    get:
+      operationId: listSmsLogs
+      tags: [sms]
+      summary: List SMS logs
+      parameters:
+        - name: studentId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [sent, failed, pending]
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: List of SMS logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SmsLog"
+
+  # ── Dashboard ──────────────────────────────────────────────────────────────
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get overall dashboard statistics
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent biometric scan activity with student details
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Recent activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    # ── Student ──────────────────────────────────────────────────────────────
+    Student:
+      type: object
+      required: [id, name, grade, guardianName, guardianPhone, biometricId, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        grade:
+          type: string
+        guardianName:
+          type: string
+        guardianPhone:
+          type: string
+        biometricId:
+          type: string
+        busId:
+          type: ["integer", "null"]
+        photoUrl:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+
+    StudentInput:
+      type: object
+      required: [name, grade, guardianName, guardianPhone, biometricId]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        grade:
+          type: string
+          minLength: 1
+        guardianName:
+          type: string
+          minLength: 1
+        guardianPhone:
+          type: string
+          minLength: 1
+        biometricId:
+          type: string
+          minLength: 1
+        busId:
+          type: ["integer", "null"]
+        photoUrl:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+
+    StudentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        grade:
+          type: string
+        guardianName:
+          type: string
+        guardianPhone:
+          type: string
+        biometricId:
+          type: string
+        busId:
+          type: ["integer", "null"]
+        photoUrl:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+
+    # ── Bus ──────────────────────────────────────────────────────────────────
+    Bus:
+      type: object
+      required: [id, busNumber, driverName, driverPhone, createdAt]
+      properties:
+        id:
+          type: integer
+        busNumber:
+          type: string
+        driverName:
+          type: string
+        driverPhone:
+          type: string
+        routeId:
+          type: ["integer", "null"]
+        capacity:
+          type: integer
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+
+    BusInput:
+      type: object
+      required: [busNumber, driverName, driverPhone]
+      properties:
+        busNumber:
+          type: string
+          minLength: 1
+        driverName:
+          type: string
+          minLength: 1
+        driverPhone:
+          type: string
+          minLength: 1
+        routeId:
+          type: ["integer", "null"]
+        capacity:
+          type: integer
+        isActive:
+          type: boolean
+
+    BusUpdate:
+      type: object
+      properties:
+        busNumber:
+          type: string
+        driverName:
+          type: string
+        driverPhone:
+          type: string
+        routeId:
+          type: ["integer", "null"]
+        capacity:
+          type: integer
+        isActive:
+          type: boolean
+
+    # ── Route ────────────────────────────────────────────────────────────────
+    Route:
+      type: object
+      required: [id, name, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        totalStops:
+          type: integer
+        estimatedDurationMinutes:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    RouteInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: ["string", "null"]
+        totalStops:
+          type: integer
+        estimatedDurationMinutes:
+          type: ["integer", "null"]
+
+    RouteUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        totalStops:
+          type: integer
+        estimatedDurationMinutes:
+          type: ["integer", "null"]
+
+    # ── Trip ─────────────────────────────────────────────────────────────────
+    Trip:
+      type: object
+      required: [id, busId, status, startedAt, createdAt]
+      properties:
+        id:
+          type: integer
+        busId:
+          type: integer
+        routeId:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [active, completed]
+        startedAt:
+          type: string
+        endedAt:
+          type: ["string", "null"]
+        totalBoardings:
+          type: integer
+        totalAlightings:
+          type: integer
+        createdAt:
+          type: string
+
+    TripInput:
+      type: object
+      required: [busId]
+      properties:
+        busId:
+          type: integer
+        routeId:
+          type: ["integer", "null"]
+
+    TripUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, completed]
+        endedAt:
+          type: ["string", "null"]
+
+    # ── ScanEvent ─────────────────────────────────────────────────────────────
+    ScanEvent:
+      type: object
+      required: [id, studentId, tripId, scanType, scannedAt]
+      properties:
+        id:
+          type: integer
+        studentId:
+          type: integer
+        tripId:
+          type: integer
+        scanType:
+          type: string
+          enum: [board, alight]
+        scannedAt:
+          type: string
+        location:
+          type: ["string", "null"]
+        smsSent:
+          type: boolean
+        studentName:
+          type: ["string", "null"]
+        guardianPhone:
+          type: ["string", "null"]
+        busNumber:
+          type: ["string", "null"]
+
+    ScanInput:
+      type: object
+      required: [biometricId, tripId, scanType]
+      properties:
+        biometricId:
+          type: string
+          minLength: 1
+        tripId:
+          type: integer
+        scanType:
+          type: string
+          enum: [board, alight]
+        location:
+          type: ["string", "null"]
+
+    # ── SmsGateway ────────────────────────────────────────────────────────────
+    SmsGateway:
+      type: object
+      required: [id, provider, apiUrl, senderId, isActive]
+      properties:
+        id:
+          type: integer
+        provider:
+          type: string
+        apiUrl:
+          type: string
+        apiKey:
+          type: string
+        senderId:
+          type: string
+        isActive:
+          type: boolean
+        updatedAt:
+          type: string
+
+    SmsGatewayInput:
+      type: object
+      required: [provider, apiUrl, apiKey, senderId]
+      properties:
+        provider:
+          type: string
+          minLength: 1
+        apiUrl:
+          type: string
+          minLength: 1
+        apiKey:
+          type: string
+          minLength: 1
+        senderId:
+          type: string
+          minLength: 1
+        isActive:
+          type: boolean
+
+    # ── SmsLog ────────────────────────────────────────────────────────────────
+    SmsLog:
+      type: object
+      required: [id, studentId, guardianPhone, message, status, sentAt]
+      properties:
+        id:
+          type: integer
+        studentId:
+          type: integer
+        guardianPhone:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+          enum: [sent, failed, pending]
+        errorMessage:
+          type: ["string", "null"]
+        sentAt:
+          type: string
+        studentName:
+          type: ["string", "null"]
+
+    # ── Dashboard ─────────────────────────────────────────────────────────────
+    DashboardStats:
+      type: object
+      required: [totalStudents, totalBuses, activeTrips, todayScans, todayBoardings, todayAlightings, smsSentToday, smsFailedToday]
+      properties:
+        totalStudents:
+          type: integer
+        totalBuses:
+          type: integer
+        totalRoutes:
+          type: integer
+        activeTrips:
+          type: integer
+        todayScans:
+          type: integer
+        todayBoardings:
+          type: integer
+        todayAlightings:
+          type: integer
+        smsSentToday:
+          type: integer
+        smsFailedToday:
+          type: integer
+        studentsOnBus:
+          type: integer
+
+    ActivityItem:
+      type: object
+      required: [id, studentName, studentId, scanType, scannedAt, busNumber, tripId]
+      properties:
+        id:
+          type: integer
+        studentName:
+          type: string
+        studentId:
+          type: integer
+        grade:
+          type: ["string", "null"]
+        guardianName:
+          type: ["string", "null"]
+        scanType:
+          type: string
+          enum: [board, alight]
+        scannedAt:
+          type: string
+        busNumber:
+          type: ["string", "null"]
+        tripId:
+          type: integer
+        location:
+          type: ["string", "null"]
+        smsSent:
+          type: boolean
+        travelDurationMinutes:
+          type: ["integer", "null"]
