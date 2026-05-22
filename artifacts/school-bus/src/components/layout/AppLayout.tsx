@@ -1,14 +1,11 @@
 import { Link, useLocation } from "wouter";
-import { Shield, Users, Bus as BusIcon, Map as MapIcon, Activity, Radio, Settings, ShieldCheck } from "lucide-react";
+import { Shield, Users, Settings, ShieldCheck, Cpu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: ShieldCheck },
   { name: "Students", href: "/students", icon: Users },
-  { name: "Buses", href: "/buses", icon: BusIcon },
-  { name: "Routes", href: "/routes", icon: MapIcon },
-  { name: "Trips", href: "/trips", icon: Activity },
-  { name: "Live Scans", href: "/scans", icon: Radio },
+  { name: "Devices", href: "/devices", icon: Cpu },
   { name: "SMS Config", href: "/sms", icon: Settings },
 ];
 
@@ -35,7 +32,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       ? "bg-slate-800 text-white"
                       : "text-slate-300 hover:bg-slate-800 hover:text-white"
                   )}
-                  data-testid={`nav-link-${item.name.toLowerCase()}`}
                 >
                   <item.icon
                     className={cn(
@@ -51,7 +47,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="p-4 bg-slate-950 border-t border-slate-800">
           <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center text-amber-500 font-bold">
+            <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center text-amber-500 font-bold text-sm">
               AD
             </div>
             <div className="ml-3">

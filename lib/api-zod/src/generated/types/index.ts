@@ -12,6 +12,7 @@ export * from './bus';
 export * from './busInput';
 export * from './busUpdate';
 export * from './dashboardStats';
+export * from './device';
 export * from './getRecentActivityParams';
 export * from './healthStatus';
 export * from './listScansParams';

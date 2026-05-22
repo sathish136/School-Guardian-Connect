@@ -127,6 +127,30 @@ export const DeleteStudentParams = zod.object({
 
 
 /**
+ * @summary List all biometric devices
+ */
+export const ListDevicesResponseItem = zod.object({
+  "id": zod.number(),
+  "serialNumber": zod.string(),
+  "deviceName": zod.string().nullish(),
+  "ipAddress": zod.string().nullish(),
+  "isOnline": zod.boolean(),
+  "totalPunches": zod.number(),
+  "lastSeen": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListDevicesResponse = zod.array(ListDevicesResponseItem)
+
+
+/**
+ * @summary Remove a device
+ */
+export const DeleteDeviceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary List all buses
  */
 export const ListBusesResponseItem = zod.object({

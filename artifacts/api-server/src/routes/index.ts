@@ -7,6 +7,7 @@ import tripsRouter from "./trips";
 import scansRouter from "./scans";
 import smsRouter from "./sms";
 import dashboardRouter from "./dashboard";
+import devicesRouter from "./devices";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(tripsRouter);
 router.use(scansRouter);
 router.use(smsRouter);
 router.use(dashboardRouter);
+router.use(devicesRouter);
 
 export default router;

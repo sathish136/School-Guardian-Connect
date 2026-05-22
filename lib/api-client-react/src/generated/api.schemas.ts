@@ -249,6 +249,19 @@ export interface SmsLog {
   studentName?: string | null;
 }
 
+export interface Device {
+  id: number;
+  serialNumber: string;
+  /** @nullable */
+  deviceName?: string | null;
+  /** @nullable */
+  ipAddress?: string | null;
+  isOnline: boolean;
+  totalPunches: number;
+  lastSeen: string;
+  createdAt: string;
+}
+
 export interface DashboardStats {
   totalStudents: number;
   totalBuses: number;

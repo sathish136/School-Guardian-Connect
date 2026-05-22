@@ -1,11 +1,14 @@
 import { useState } from "react";
 import {
   useListStudents, useCreateStudent, useUpdateStudent, useDeleteStudent,
-  useListBuses, getListStudentsQueryKey
+  getListStudentsQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Pencil, Trash2, UserCheck, UserX } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Plus, Search, Pencil, Trash2, UserCheck, UserX, Fingerprint,
+  Phone, User, BookOpen, GraduationCap, Bus
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,14 +20,13 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import type { Student, StudentInput } from "@workspace/api-client-react";
 
 function StudentForm({
-  initial, buses, onSubmit, onClose, isPending
+  initial, onSubmit, onClose, isPending
 }: {
   initial?: Student;
-  buses: { id: number; busNumber: string }[];
   onSubmit: (data: StudentInput) => void;
   onClose: () => void;
   isPending: boolean;
@@ -39,49 +41,196 @@ function StudentForm({
     isActive: initial?.isActive ?? true,
   });
 
+  const field = (
+    id: keyof StudentInput,
+    label: string,
+    icon: React.ReactNode,
+    extra?: Partial<React.InputHTMLAttributes<HTMLInputElement>>
+  ) => (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+        {label}
+      </Label>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">{icon}</span>
+        <Input
+          id={id}
+          className="pl-9 h-10"
+          value={form[id] as string ?? ""}
+          onChange={e => setForm(p => ({ ...p, [id]: e.target.value }))}
+          {...extra}
+        />
+      </div>
+    </div>
+  );
+
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4">
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="name">Full Name</Label>
-          <Input id="name" data-testid="input-student-name" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="grade">Grade</Label>
-          <Input id="grade" data-testid="input-student-grade" value={form.grade} onChange={e => setForm(p => ({ ...p, grade: e.target.value }))} required />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="guardianName">Guardian Name</Label>
-          <Input id="guardianName" data-testid="input-guardian-name" value={form.guardianName} onChange={e => setForm(p => ({ ...p, guardianName: e.target.value }))} required />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="guardianPhone">Guardian Phone</Label>
-          <Input id="guardianPhone" data-testid="input-guardian-phone" value={form.guardianPhone} onChange={e => setForm(p => ({ ...p, guardianPhone: e.target.value }))} required />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="biometricId">Biometric ID</Label>
-          <Input id="biometricId" data-testid="input-biometric-id" value={form.biometricId} onChange={e => setForm(p => ({ ...p, biometricId: e.target.value }))} required />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="bus">Assigned Bus</Label>
-          <Select value={form.busId ? String(form.busId) : "none"} onValueChange={v => setForm(p => ({ ...p, busId: v === "none" ? null : Number(v) }))}>
-            <SelectTrigger data-testid="select-bus">
-              <SelectValue placeholder="No bus assigned" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">No bus assigned</SelectItem>
-              {buses.map(b => <SelectItem key={b.id} value={String(b.id)}>Bus {b.busNumber}</SelectItem>)}
-            </SelectContent>
-          </Select>
+        {field("name", "Full Name", <User className="h-4 w-4" />, { placeholder: "e.g. John Doe", required: true })}
+        {field("grade", "Grade / Class", <GraduationCap className="h-4 w-4" />, { placeholder: "e.g. Grade 5A", required: true })}
+      </div>
+
+      <div className="border-t pt-4">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Guardian Information</p>
+        <div className="grid grid-cols-2 gap-4">
+          {field("guardianName", "Guardian Name", <User className="h-4 w-4" />, { placeholder: "e.g. Jane Doe", required: true })}
+          {field("guardianPhone", "Guardian Phone", <Phone className="h-4 w-4" />, { placeholder: "+1 555 000 0000", required: true })}
         </div>
       </div>
-      <div className="flex justify-end gap-3 pt-2">
-        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-        <Button type="submit" disabled={isPending} data-testid="button-save-student">
-          {isPending ? "Saving..." : initial ? "Update Student" : "Add Student"}
-        </Button>
+
+      <div className="border-t pt-4">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Biometric & Transport</p>
+        <div className="grid grid-cols-2 gap-4">
+          {field("biometricId", "Biometric ID", <Fingerprint className="h-4 w-4" />, { placeholder: "Device enrollment ID", required: true, className: "pl-9 h-10 font-mono" })}
+          <div className="space-y-1.5">
+            <Label htmlFor="busId" className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+              Bus Number (optional)
+            </Label>
+            <div className="relative">
+              <Bus className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Input
+                id="busId"
+                className="pl-9 h-10"
+                placeholder="e.g. BUS-01"
+                value={form.busId ?? ""}
+                onChange={e => setForm(p => ({ ...p, busId: e.target.value ? Number(e.target.value) : null }))}
+                type="number"
+                min={1}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between border-t pt-4">
+        <div className="flex items-center gap-3">
+          <Switch
+            id="isActive"
+            checked={form.isActive ?? true}
+            onCheckedChange={v => setForm(p => ({ ...p, isActive: v }))}
+          />
+          <Label htmlFor="isActive" className="text-sm text-slate-700">
+            {form.isActive ? "Active — will receive SMS notifications" : "Inactive — SMS notifications paused"}
+          </Label>
+        </div>
+        <div className="flex gap-3">
+          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="submit" disabled={isPending} className="bg-slate-900 hover:bg-slate-800">
+            {isPending ? "Saving..." : initial ? "Save Changes" : "Add Student"}
+          </Button>
+        </div>
       </div>
     </form>
+  );
+}
+
+function StudentCard({
+  student, onEdit, onDelete, isDeleting
+}: {
+  student: Student;
+  onEdit: () => void;
+  onDelete: (id: number) => void;
+  isDeleting: boolean;
+}) {
+  const initials = student.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+  const colors = [
+    "bg-violet-100 text-violet-700",
+    "bg-blue-100 text-blue-700",
+    "bg-amber-100 text-amber-700",
+    "bg-emerald-100 text-emerald-700",
+    "bg-rose-100 text-rose-700",
+    "bg-cyan-100 text-cyan-700",
+  ];
+  const color = colors[student.id % colors.length];
+
+  return (
+    <Card className={`group hover:shadow-md transition-all duration-200 border ${student.isActive ? "border-slate-200" : "border-slate-100 opacity-70"}`}>
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`h-10 w-10 rounded-full ${color} flex items-center justify-center font-bold text-sm shrink-0`}>
+              {initials}
+            </div>
+            <div>
+              <p className="font-semibold text-slate-900 text-sm leading-tight">{student.name}</p>
+              <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                <GraduationCap className="h-3 w-3" />
+                {student.grade}
+              </p>
+            </div>
+          </div>
+          {student.isActive
+            ? <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs shrink-0"><UserCheck className="h-3 w-3 mr-1" />Active</Badge>
+            : <Badge variant="outline" className="text-slate-400 text-xs shrink-0"><UserX className="h-3 w-3 mr-1" />Inactive</Badge>
+          }
+        </div>
+
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center gap-2 text-xs text-slate-600">
+            <User className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <span>{student.guardianName}</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-600">
+            <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <span className="font-medium">{student.guardianPhone}</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <Fingerprint className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+            <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-700 tracking-wider">
+              {student.biometricId}
+            </span>
+          </div>
+          {student.busId && (
+            <div className="flex items-center gap-2 text-xs text-slate-600">
+              <Bus className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+              <span>Bus #{student.busId}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2 border-t pt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onEdit}
+            className="flex-1 h-8 text-xs"
+          >
+            <Pencil className="h-3 w-3 mr-1.5" />
+            Edit
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2.5 text-red-500 hover:text-red-700 hover:border-red-300 hover:bg-red-50"
+                disabled={isDeleting}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remove {student.name}?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete this student and all associated scan records. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => onDelete(student.id)}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -92,7 +241,6 @@ export default function Students() {
   const [editStudent, setEditStudent] = useState<Student | null>(null);
 
   const { data: students = [], isLoading } = useListStudents({ search: search || undefined });
-  const { data: buses = [] } = useListBuses();
   const create = useCreateStudent();
   const update = useUpdateStudent();
   const remove = useDeleteStudent();
@@ -116,113 +264,121 @@ export default function Students() {
     remove.mutate({ id }, { onSuccess: invalidate });
   };
 
-  const busMap = Object.fromEntries(buses.map(b => [b.id, b.busNumber]));
+  const active = students.filter(s => s.isActive);
+  const inactive = students.filter(s => !s.isActive);
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight" data-testid="page-title">Students</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage enrolled students and guardian contacts</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Students</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {students.length > 0
+              ? `${active.length} active · ${inactive.length} inactive · ${students.length} total`
+              : "Manage enrolled students and guardian contacts"}
+          </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button data-testid="button-add-student" className="bg-slate-900 hover:bg-slate-800">
+            <Button className="bg-slate-900 hover:bg-slate-800">
               <Plus className="h-4 w-4 mr-2" /> Add Student
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-xl">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Add New Student</DialogTitle>
+              <DialogTitle className="text-lg">Add New Student</DialogTitle>
             </DialogHeader>
-            <StudentForm buses={buses} onSubmit={handleCreate} onClose={() => setDialogOpen(false)} isPending={create.isPending} />
+            <StudentForm onSubmit={handleCreate} onClose={() => setDialogOpen(false)} isPending={create.isPending} />
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="relative">
+      {/* Search */}
+      <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
         <Input
-          data-testid="input-search-students"
-          className="pl-9 max-w-sm"
-          placeholder="Search students..."
+          className="pl-9 h-10"
+          placeholder="Search by name, grade, or guardian..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-8 text-center text-slate-500" data-testid="students-loading">Loading students...</div>
-          ) : students.length === 0 ? (
-            <div className="p-12 text-center text-slate-500">
-              <UserCheck className="h-12 w-12 mx-auto text-slate-300 mb-3" />
-              <p className="font-medium">No students found</p>
-              <p className="text-sm mt-1">Add a student to get started</p>
+      {/* Content */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-5 h-44 bg-slate-50" />
+            </Card>
+          ))}
+        </div>
+      ) : students.length === 0 ? (
+        <Card>
+          <CardContent className="py-20 text-center">
+            <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+              <BookOpen className="h-7 w-7 text-slate-400" />
             </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-slate-50">
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Student</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Grade</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Guardian</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Guardian Phone</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Biometric ID</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Bus</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Status</th>
-                  <th className="px-4 py-3"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {students.map(s => (
-                  <tr key={s.id} className="hover:bg-slate-50 transition-colors" data-testid={`row-student-${s.id}`}>
-                    <td className="px-4 py-3 font-medium text-slate-900">{s.name}</td>
-                    <td className="px-4 py-3 text-slate-600">{s.grade}</td>
-                    <td className="px-4 py-3 text-slate-600">{s.guardianName}</td>
-                    <td className="px-4 py-3 text-slate-600">{s.guardianPhone}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-500 bg-slate-50">{s.biometricId}</td>
-                    <td className="px-4 py-3 text-slate-600">{s.busId ? `Bus ${busMap[s.busId]}` : <span className="text-slate-400">Unassigned</span>}</td>
-                    <td className="px-4 py-3">
-                      {s.isActive
-                        ? <Badge className="bg-emerald-100 text-emerald-700 border-0"><UserCheck className="h-3 w-3 mr-1" />Active</Badge>
-                        : <Badge variant="outline" className="text-slate-500"><UserX className="h-3 w-3 mr-1" />Inactive</Badge>
-                      }
-                    </td>
-                    <td className="px-4 py-3 flex items-center gap-2 justify-end">
-                      <Dialog open={editStudent?.id === s.id} onOpenChange={open => setEditStudent(open ? s : null)}>
-                        <DialogTrigger asChild>
-                          <Button variant="ghost" size="sm" data-testid={`button-edit-student-${s.id}`}><Pencil className="h-4 w-4" /></Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-xl">
-                          <DialogHeader><DialogTitle>Edit Student</DialogTitle></DialogHeader>
-                          <StudentForm initial={s} buses={buses} onSubmit={handleUpdate} onClose={() => setEditStudent(null)} isPending={update.isPending} />
-                        </DialogContent>
-                      </Dialog>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700" data-testid={`button-delete-student-${s.id}`}><Trash2 className="h-4 w-4" /></Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete {s.name}?</AlertDialogTitle>
-                            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(s.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </td>
-                  </tr>
+            <p className="font-semibold text-slate-700">No students yet</p>
+            <p className="text-sm text-slate-400 mt-1 mb-5">Add your first student to get started with biometric tracking</p>
+            <Button onClick={() => setDialogOpen(true)} className="bg-slate-900 hover:bg-slate-800">
+              <Plus className="h-4 w-4 mr-2" /> Add First Student
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {active.length > 0 && (
+            <div>
+              {inactive.length > 0 && (
+                <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                  Active ({active.length})
+                </h2>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {active.map(s => (
+                  <Dialog key={s.id} open={editStudent?.id === s.id} onOpenChange={open => setEditStudent(open ? s : null)}>
+                    <StudentCard
+                      student={s}
+                      onEdit={() => setEditStudent(s)}
+                      onDelete={handleDelete}
+                      isDeleting={remove.isPending}
+                    />
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader><DialogTitle className="text-lg">Edit Student</DialogTitle></DialogHeader>
+                      <StudentForm initial={s} onSubmit={handleUpdate} onClose={() => setEditStudent(null)} isPending={update.isPending} />
+                    </DialogContent>
+                  </Dialog>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </div>
           )}
-        </CardContent>
-      </Card>
+          {inactive.length > 0 && (
+            <div>
+              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                Inactive ({inactive.length})
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {inactive.map(s => (
+                  <Dialog key={s.id} open={editStudent?.id === s.id} onOpenChange={open => setEditStudent(open ? s : null)}>
+                    <StudentCard
+                      student={s}
+                      onEdit={() => setEditStudent(s)}
+                      onDelete={handleDelete}
+                      isDeleting={remove.isPending}
+                    />
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader><DialogTitle className="text-lg">Edit Student</DialogTitle></DialogHeader>
+                      <StudentForm initial={s} onSubmit={handleUpdate} onClose={() => setEditStudent(null)} isPending={update.isPending} />
+                    </DialogContent>
+                  </Dialog>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

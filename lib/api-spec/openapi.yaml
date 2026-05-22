@@ -24,6 +24,8 @@ tags:
     description: SMS logs and gateway configuration
   - name: dashboard
     description: Dashboard statistics and activity
+  - name: devices
+    description: Biometric device management
 
 paths:
   /healthz:
@@ -131,6 +133,37 @@ paths:
       operationId: deleteStudent
       tags: [students]
       summary: Delete student
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Devices ────────────────────────────────────────────────────────────────
+  /devices:
+    get:
+      operationId: listDevices
+      tags: [devices]
+      summary: List all biometric devices
+      responses:
+        "200":
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Device"
+
+  /devices/{id}:
+    delete:
+      operationId: deleteDevice
+      tags: [devices]
+      summary: Remove a device
       parameters:
         - name: id
           in: path
@@ -910,6 +943,28 @@ components:
           type: string
         studentName:
           type: ["string", "null"]
+
+    # ── Device ────────────────────────────────────────────────────────────────
+    Device:
+      type: object
+      required: [id, serialNumber, isOnline, totalPunches, lastSeen, createdAt]
+      properties:
+        id:
+          type: integer
+        serialNumber:
+          type: string
+        deviceName:
+          type: ["string", "null"]
+        ipAddress:
+          type: ["string", "null"]
+        isOnline:
+          type: boolean
+        totalPunches:
+          type: integer
+        lastSeen:
+          type: string
+        createdAt:
+          type: string
 
     # ── Dashboard ─────────────────────────────────────────────────────────────
     DashboardStats:

@@ -5,3 +5,4 @@ export * from "./trips";
 export * from "./scans";
 export * from "./smsGateway";
 export * from "./smsLogs";
+export * from "./devices";

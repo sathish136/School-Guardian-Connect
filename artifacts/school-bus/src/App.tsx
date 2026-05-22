@@ -6,10 +6,7 @@ import NotFound from "@/pages/not-found";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import Students from "@/pages/Students";
-import Buses from "@/pages/Buses";
-import RoutesPage from "@/pages/Routes";
-import Trips from "@/pages/Trips";
-import Scans from "@/pages/Scans";
+import Devices from "@/pages/Devices";
 import SmsPage from "@/pages/Sms";
 
 const queryClient = new QueryClient();
@@ -20,10 +17,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/students" component={Students} />
-        <Route path="/buses" component={Buses} />
-        <Route path="/routes" component={RoutesPage} />
-        <Route path="/trips" component={Trips} />
-        <Route path="/scans" component={Scans} />
+        <Route path="/devices" component={Devices} />
         <Route path="/sms" component={SmsPage} />
         <Route component={NotFound} />
       </Switch>
