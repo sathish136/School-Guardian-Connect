@@ -249,6 +249,22 @@ export interface SmsLog {
   studentName?: string | null;
 }
 
+export interface WhatsappGateway {
+  id: number;
+  instanceId: string;
+  token: string;
+  isActive: boolean;
+  updatedAt: string;
+}
+
+export interface WhatsappGatewayInput {
+  /** @minLength 1 */
+  instanceId: string;
+  /** @minLength 1 */
+  token: string;
+  isActive?: boolean;
+}
+
 export interface Device {
   id: number;
   serialNumber: string;

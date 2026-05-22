@@ -8,6 +8,7 @@ import scansRouter from "./scans";
 import smsRouter from "./sms";
 import dashboardRouter from "./dashboard";
 import devicesRouter from "./devices";
+import whatsappRouter from "./whatsapp";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(scansRouter);
 router.use(smsRouter);
 router.use(dashboardRouter);
 router.use(devicesRouter);
+router.use(whatsappRouter);
 
 export default router;

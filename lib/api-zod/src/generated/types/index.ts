@@ -40,3 +40,5 @@ export * from './tripInput';
 export * from './tripStatus';
 export * from './tripUpdate';
 export * from './tripUpdateStatus';
+export * from './whatsappGateway';
+export * from './whatsappGatewayInput';

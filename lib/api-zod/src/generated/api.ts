@@ -127,6 +127,40 @@ export const DeleteStudentParams = zod.object({
 
 
 /**
+ * @summary Get WhatsApp gateway config
+ */
+export const GetWhatsappGatewayResponse = zod.object({
+  "id": zod.number(),
+  "instanceId": zod.string(),
+  "token": zod.string(),
+  "isActive": zod.boolean(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Save WhatsApp gateway config
+ */
+
+
+
+
+export const UpsertWhatsappGatewayBody = zod.object({
+  "instanceId": zod.string().min(1),
+  "token": zod.string().min(1),
+  "isActive": zod.boolean().optional()
+})
+
+export const UpsertWhatsappGatewayResponse = zod.object({
+  "id": zod.number(),
+  "instanceId": zod.string(),
+  "token": zod.string(),
+  "isActive": zod.boolean(),
+  "updatedAt": zod.string()
+})
+
+
+/**
  * @summary List all biometric devices
  */
 export const ListDevicesResponseItem = zod.object({

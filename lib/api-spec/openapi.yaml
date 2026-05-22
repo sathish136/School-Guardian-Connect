@@ -26,6 +26,8 @@ tags:
     description: Dashboard statistics and activity
   - name: devices
     description: Biometric device management
+  - name: whatsapp
+    description: WhatsApp gateway via UltraMsg
 
 paths:
   /healthz:
@@ -142,6 +144,39 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  # ── WhatsApp Gateway ───────────────────────────────────────────────────────
+  /whatsapp-gateway:
+    get:
+      operationId: getWhatsappGateway
+      tags: [whatsapp]
+      summary: Get WhatsApp gateway config
+      responses:
+        "200":
+          description: WhatsApp gateway config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhatsappGateway"
+        "404":
+          description: Not configured
+    put:
+      operationId: upsertWhatsappGateway
+      tags: [whatsapp]
+      summary: Save WhatsApp gateway config
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WhatsappGatewayInput"
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhatsappGateway"
 
   # ── Devices ────────────────────────────────────────────────────────────────
   /devices:
@@ -943,6 +978,35 @@ components:
           type: string
         studentName:
           type: ["string", "null"]
+
+    # ── WhatsappGateway ───────────────────────────────────────────────────────
+    WhatsappGateway:
+      type: object
+      required: [id, instanceId, token, isActive, updatedAt]
+      properties:
+        id:
+          type: integer
+        instanceId:
+          type: string
+        token:
+          type: string
+        isActive:
+          type: boolean
+        updatedAt:
+          type: string
+
+    WhatsappGatewayInput:
+      type: object
+      required: [instanceId, token]
+      properties:
+        instanceId:
+          type: string
+          minLength: 1
+        token:
+          type: string
+          minLength: 1
+        isActive:
+          type: boolean
 
     # ── Device ────────────────────────────────────────────────────────────────
     Device:
