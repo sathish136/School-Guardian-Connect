@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import {
   useGetSmsGateway, useUpsertSmsGateway, useListSmsLogs,
-  useGetWhatsappGateway, useUpsertWhatsappGateway,
+  useGetWhatsappGateway, useUpsertWhatsappGateway, useTestWhatsappGateway,
   getGetSmsGatewayQueryKey, getGetWhatsappGatewayQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, CheckCircle2, XCircle, Clock, Save, Smartphone, Eye, EyeOff, Info } from "lucide-react";
+import { MessageSquare, CheckCircle2, XCircle, Clock, Save, Smartphone, Eye, EyeOff, Info, Send } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
@@ -94,14 +94,28 @@ function WhatsappTab() {
   const qc = useQueryClient();
   const { data: gw } = useGetWhatsappGateway();
   const save = useUpsertWhatsappGateway();
+  const test = useTestWhatsappGateway();
   const [saved, setSaved] = useState(false);
   const [show, setShow] = useState(false);
   const [form, setForm] = useState<WhatsappGatewayInput>({ instanceId: "", token: "", isActive: true });
+  const [testPhone, setTestPhone] = useState("");
+  const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+
   useEffect(() => { if (gw) setForm({ instanceId: gw.instanceId, token: gw.token, isActive: gw.isActive }); }, [gw]);
 
   const handleSave = () => save.mutate({ data: form }, {
     onSuccess: () => { qc.invalidateQueries({ queryKey: getGetWhatsappGatewayQueryKey() }); setSaved(true); setTimeout(() => setSaved(false), 2500); }
   });
+
+  const handleTest = () => {
+    setTestResult(null);
+    test.mutate({ data: { phone: testPhone } }, {
+      onSuccess: (res) => {
+        setTestResult({ success: res.success, error: res.error ?? undefined });
+      },
+      onError: () => setTestResult({ success: false, error: "Request failed" }),
+    });
+  };
 
   return (
     <Card>
@@ -118,9 +132,51 @@ function WhatsappTab() {
             </button>
           </div>
         </Field>
-        <div className="py-4 flex items-center gap-3">
+        <div className="py-4 flex items-center gap-3" style={{ borderBottom: `1px solid #F4F4F5` }}>
           <Switch checked={form.isActive ?? true} onCheckedChange={v => setForm(p => ({ ...p, isActive: v }))} />
           <span className="text-[13px]" style={{ color: "#52525B" }}>{form.isActive ? "Active — WhatsApp enabled" : "Inactive — will fall back to SMS"}</span>
+        </div>
+
+        {/* Test section */}
+        <div className="py-4">
+          <p className="text-[12px] font-semibold uppercase tracking-wider mb-3" style={{ color: MUTED }}>Test connection</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="tel"
+              className="flex-1 h-9 px-3 rounded-md text-[13px] outline-none"
+              style={{ border: `1px solid #E8E8EC`, background: "#fff", color: "#0A0A0B" }}
+              placeholder="Phone number with country code (e.g. +1 555 000 0000)"
+              value={testPhone}
+              onChange={e => { setTestPhone(e.target.value); setTestResult(null); }}
+            />
+            <button
+              onClick={handleTest}
+              disabled={!testPhone || test.isPending}
+              className="flex items-center gap-1.5 h-9 px-3.5 rounded-md text-[13px] font-medium transition-opacity"
+              style={{
+                background: "#F4F4F5", color: "#3F3F46", border: "1px solid #E8E8EC",
+                opacity: !testPhone || test.isPending ? 0.5 : 1,
+              }}
+            >
+              <Send style={{ width: 13, height: 13 }} />
+              {test.isPending ? "Sending…" : "Send test"}
+            </button>
+          </div>
+          {testResult && (
+            <div
+              className="mt-2.5 flex items-start gap-2 px-3 py-2.5 rounded-md text-[13px]"
+              style={testResult.success
+                ? { background: "#F0FDF4", border: "1px solid #BBF7D0", color: "#15803D" }
+                : { background: "#FFF1F2", border: "1px solid #FECDD3", color: "#BE123C" }
+              }
+            >
+              {testResult.success
+                ? <CheckCircle2 style={{ width: 14, height: 14, flexShrink: 0, marginTop: 1 }} />
+                : <XCircle style={{ width: 14, height: 14, flexShrink: 0, marginTop: 1 }} />
+              }
+              <span>{testResult.success ? "Test message sent successfully! Check your WhatsApp." : testResult.error ?? "Failed to send"}</span>
+            </div>
+          )}
         </div>
       </div>
       <CardFoot>

@@ -161,6 +161,22 @@ export const UpsertWhatsappGatewayResponse = zod.object({
 
 
 /**
+ * @summary Send a test WhatsApp message
+ */
+
+
+
+export const TestWhatsappGatewayBody = zod.object({
+  "phone": zod.string().min(1)
+})
+
+export const TestWhatsappGatewayResponse = zod.object({
+  "success": zod.boolean(),
+  "error": zod.string().optional()
+})
+
+
+/**
  * @summary List all biometric devices
  */
 export const ListDevicesResponseItem = zod.object({

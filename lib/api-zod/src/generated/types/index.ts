@@ -42,3 +42,5 @@ export * from './tripUpdate';
 export * from './tripUpdateStatus';
 export * from './whatsappGateway';
 export * from './whatsappGatewayInput';
+export * from './whatsappTestInput';
+export * from './whatsappTestResult';

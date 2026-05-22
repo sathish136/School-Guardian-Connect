@@ -257,6 +257,16 @@ export interface WhatsappGateway {
   updatedAt: string;
 }
 
+export interface WhatsappTestInput {
+  /** @minLength 1 */
+  phone: string;
+}
+
+export interface WhatsappTestResult {
+  success: boolean;
+  error?: string;
+}
+
 export interface WhatsappGatewayInput {
   /** @minLength 1 */
   instanceId: string;

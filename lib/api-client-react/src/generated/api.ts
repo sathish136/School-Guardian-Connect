@@ -47,7 +47,9 @@ import type {
   TripInput,
   TripUpdate,
   WhatsappGateway,
-  WhatsappGatewayInput
+  WhatsappGatewayInput,
+  WhatsappTestInput,
+  WhatsappTestResult
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -660,6 +662,77 @@ export const useUpsertWhatsappGateway = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpsertWhatsappGatewayMutationOptions(options));
+    }
+
+export const getTestWhatsappGatewayUrl = () => {
+
+
+
+
+  return `/api/whatsapp-gateway/test`
+}
+
+/**
+ * @summary Send a test WhatsApp message
+ */
+export const testWhatsappGateway = async (whatsappTestInput: WhatsappTestInput, options?: RequestInit): Promise<WhatsappTestResult> => {
+
+  return customFetch<WhatsappTestResult>(getTestWhatsappGatewayUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      whatsappTestInput,)
+  }
+);}
+
+
+
+
+export const getTestWhatsappGatewayMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testWhatsappGateway>>, TError,{data: BodyType<WhatsappTestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof testWhatsappGateway>>, TError,{data: BodyType<WhatsappTestInput>}, TContext> => {
+
+const mutationKey = ['testWhatsappGateway'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testWhatsappGateway>>, {data: BodyType<WhatsappTestInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  testWhatsappGateway(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestWhatsappGatewayMutationResult = NonNullable<Awaited<ReturnType<typeof testWhatsappGateway>>>
+    export type TestWhatsappGatewayMutationBody = BodyType<WhatsappTestInput>
+    export type TestWhatsappGatewayMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a test WhatsApp message
+ */
+export const useTestWhatsappGateway = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testWhatsappGateway>>, TError,{data: BodyType<WhatsappTestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof testWhatsappGateway>>,
+        TError,
+        {data: BodyType<WhatsappTestInput>},
+        TContext
+      > => {
+      return useMutation(getTestWhatsappGatewayMutationOptions(options));
     }
 
 export const getListDevicesUrl = () => {

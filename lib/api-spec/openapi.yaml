@@ -178,6 +178,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/WhatsappGateway"
 
+  /whatsapp-gateway/test:
+    post:
+      operationId: testWhatsappGateway
+      tags: [whatsapp]
+      summary: Send a test WhatsApp message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WhatsappTestInput"
+      responses:
+        "200":
+          description: Test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhatsappTestResult"
+
   # ── Devices ────────────────────────────────────────────────────────────────
   /devices:
     get:
@@ -993,6 +1012,23 @@ components:
         isActive:
           type: boolean
         updatedAt:
+          type: string
+
+    WhatsappTestInput:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          minLength: 1
+
+    WhatsappTestResult:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+        error:
           type: string
 
     WhatsappGatewayInput:
