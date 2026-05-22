@@ -2,166 +2,172 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useListDevices, useDeleteDevice, getListDevicesQueryKey } from "@workspace/api-client-react";
 import type { Device } from "@workspace/api-client-react";
-import { Cpu, Wifi, WifiOff, Trash2, RefreshCw, Circle, Clock, Fingerprint } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Cpu, Wifi, WifiOff, Trash2, RefreshCw, Fingerprint, Clock, Info } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-const teal = "#0d9488";
+const ACCENT = "#5E6AD2";
+const BORDER = "#E8E8EC";
+const MUTED = "#8B8B99";
+const HEAD = "#0A0A0B";
 
-function DeviceCard({ device, onDelete }: { device: Device; onDelete: (id: number) => void }) {
+function DeviceRow({ device, onDelete }: { device: Device; onDelete: () => void }) {
   const lastSeen = new Date(device.lastSeen);
-  const diffMin = Math.floor((Date.now() - lastSeen.getTime()) / 60000);
-  const lastSeenLabel =
-    diffMin < 1 ? "Just now" :
-    diffMin < 60 ? `${diffMin}m ago` :
-    lastSeen.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  const diff = Math.floor((Date.now() - lastSeen.getTime()) / 60000);
+  const ago = diff < 1 ? "Just now" : diff < 60 ? `${diff}m ago` : lastSeen.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
   return (
-    <Card className={`border-2 transition-all rounded-2xl bg-white ${device.isOnline ? "border-teal-200" : "border-slate-100 opacity-70"}`}>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl" style={{ background: device.isOnline ? "#f0fdfa" : "#f8fafc" }}>
-              <Cpu className="h-5 w-5" style={{ color: device.isOnline ? teal : "#94a3b8" }} />
-            </div>
-            <div>
-              <p className="font-semibold text-slate-900 text-sm">{device.deviceName ?? device.serialNumber}</p>
-              <p className="text-xs text-slate-400 font-mono mt-0.5">{device.serialNumber}</p>
-            </div>
+    <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+      <td className="px-5 py-3">
+        <div className="flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded flex items-center justify-center shrink-0" style={{ background: device.isOnline ? "#EEF2FF" : "#F4F4F5" }}>
+            <Cpu style={{ width: 14, height: 14, color: device.isOnline ? ACCENT : MUTED }} />
           </div>
-          {device.isOnline
-            ? <Badge className="border-0 gap-1 text-[10px]" style={{ background: "#f0fdfa", color: "#0f766e" }}>
-                <Circle className="h-2 w-2 fill-current" style={{ color: teal }} /> Online
-              </Badge>
-            : <Badge variant="outline" className="text-slate-400 gap-1 text-[10px]">
-                <Circle className="h-2 w-2 fill-slate-300" /> Offline
-              </Badge>
-          }
+          <div>
+            <p className="text-[13px] font-medium" style={{ color: HEAD }}>{device.deviceName ?? device.serialNumber}</p>
+            <p className="text-[12px] font-mono" style={{ color: MUTED }}>{device.serialNumber}</p>
+          </div>
         </div>
-        <div className="space-y-2 text-xs text-slate-500">
-          {device.ipAddress && (
-            <div className="flex items-center gap-2"><Wifi className="h-3.5 w-3.5 text-slate-300 shrink-0" /><span className="font-mono">{device.ipAddress}</span></div>
-          )}
-          <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-slate-300 shrink-0" /><span>Last seen: {lastSeenLabel}</span></div>
-          <div className="flex items-center gap-2"><Fingerprint className="h-3.5 w-3.5 shrink-0" style={{ color: teal }} /><span>{device.totalPunches.toLocaleString()} punches</span></div>
-        </div>
-        <div className="mt-4 flex justify-end border-t border-slate-100 pt-3">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 px-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Remove device?</AlertDialogTitle>
-                <AlertDialogDescription>Remove <strong>{device.serialNumber}</strong>. It will reappear automatically when it reconnects.</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onDelete(device.id)} className="bg-red-600 hover:bg-red-700">Remove</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </CardContent>
-    </Card>
+      </td>
+      <td className="px-5 py-3">
+        {device.ipAddress
+          ? <span className="text-[12px] font-mono" style={{ color: "#52525B" }}>{device.ipAddress}</span>
+          : <span style={{ color: MUTED }}>—</span>
+        }
+      </td>
+      <td className="px-5 py-3">
+        <span className="text-[12px]" style={{ color: MUTED }}>{ago}</span>
+      </td>
+      <td className="px-5 py-3">
+        <span className="text-[13px] font-medium" style={{ color: "#52525B" }}>{device.totalPunches.toLocaleString()}</span>
+      </td>
+      <td className="px-5 py-3">
+        {device.isOnline
+          ? <span className="inline-flex items-center gap-1.5 text-[12px] font-medium px-2 py-0.5 rounded" style={{ background: "#F0FDF4", color: "#15803D" }}>
+              <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" /> Online
+            </span>
+          : <span className="inline-flex items-center gap-1.5 text-[12px] font-medium px-2 py-0.5 rounded" style={{ background: "#F4F4F5", color: MUTED }}>
+              <span className="h-1.5 w-1.5 rounded-full bg-gray-300" /> Offline
+            </span>
+        }
+      </td>
+      <td className="px-4 py-3">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button className="h-7 w-7 rounded flex items-center justify-center hover:bg-red-50 transition-colors" style={{ color: "#EF4444" }}>
+              <Trash2 style={{ width: 13, height: 13 }} />
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove device?</AlertDialogTitle>
+              <AlertDialogDescription>Remove <strong>{device.serialNumber}</strong>. It will reappear automatically when it reconnects.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={onDelete} className="bg-red-600 hover:bg-red-700">Remove</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </td>
+    </tr>
   );
 }
 
 export default function Devices() {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
   const { data: devices = [], isLoading, refetch } = useListDevices();
-  const deleteDevice = useDeleteDevice();
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const del = useDeleteDevice();
+  const [auto, setAuto] = useState(true);
 
   useEffect(() => {
-    if (!autoRefresh) return;
-    const interval = setInterval(() => refetch(), 10_000);
-    return () => clearInterval(interval);
-  }, [autoRefresh, refetch]);
-
-  const handleDelete = (id: number) => {
-    deleteDevice.mutate({ id }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListDevicesQueryKey() }) });
-  };
+    if (!auto) return;
+    const t = setInterval(() => refetch(), 10_000);
+    return () => clearInterval(t);
+  }, [auto, refetch]);
 
   const online = devices.filter(d => d.isOnline);
   const offline = devices.filter(d => !d.isOnline);
+  const totalPunches = devices.reduce((s, d) => s + d.totalPunches, 0);
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Biometric Devices</h1>
-          <p className="text-sm text-slate-400 mt-0.5">ZK devices connect automatically via ADMS on port 8082</p>
+          <h1 className="text-[22px] font-semibold" style={{ color: HEAD }}>Biometric Devices</h1>
+          <p className="text-[13px] mt-0.5" style={{ color: MUTED }}>ZK devices connect automatically via ADMS on port 8082</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setAutoRefresh(r => !r)} className="rounded-xl text-sm"
-            style={autoRefresh ? { borderColor: "#99f6e4", background: "#f0fdfa", color: teal } : {}}>
-            <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${autoRefresh ? "animate-spin" : ""}`} style={{ animationDuration: "3s" }} />
-            {autoRefresh ? "Auto-refresh on" : "Auto-refresh off"}
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => refetch()} className="rounded-xl">
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh
-          </Button>
+          <button
+            onClick={() => setAuto(v => !v)}
+            className="flex items-center gap-1.5 h-8 px-3 rounded-md text-[13px] font-medium transition-colors"
+            style={auto ? { border: `1px solid #C7D2FE`, background: "#EEF2FF", color: ACCENT } : { border: `1px solid ${BORDER}`, background: "#fff", color: MUTED }}
+          >
+            <RefreshCw style={{ width: 13, height: 13, animation: auto ? "spin 3s linear infinite" : "none" }} />
+            {auto ? "Auto-refresh on" : "Auto-refresh"}
+          </button>
+          <button
+            onClick={() => refetch()}
+            className="flex items-center gap-1.5 h-8 px-3 rounded-md text-[13px] font-medium bg-white transition-colors hover:bg-gray-50"
+            style={{ border: `1px solid ${BORDER}`, color: "#52525B" }}
+          >
+            <RefreshCw style={{ width: 13, height: 13 }} />
+            Refresh
+          </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Total Devices", value: devices.length, icon: Cpu, bg: "#f8fafc", color: "#64748b" },
-          { label: "Online Now", value: online.length, icon: Wifi, bg: "#f0fdfa", color: teal },
-          { label: "Total Punches", value: devices.reduce((s, d) => s + d.totalPunches, 0).toLocaleString(), icon: Fingerprint, bg: "#f8fafc", color: "#64748b" },
-        ].map(({ label, value, icon: Icon, bg, color }) => (
-          <div key={label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex items-center gap-4">
-            <div className="p-2.5 rounded-xl" style={{ background: bg }}><Icon className="h-5 w-5" style={{ color }} /></div>
-            <div><p className="text-2xl font-bold text-slate-900">{value}</p><p className="text-xs text-slate-400 mt-0.5">{label}</p></div>
+          { label: "Total devices", value: devices.length, icon: Cpu, color: MUTED },
+          { label: "Online now", value: online.length, icon: Wifi, color: "#16A34A" },
+          { label: "Total punches", value: totalPunches.toLocaleString(), icon: Fingerprint, color: ACCENT },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="bg-white rounded-lg px-5 py-4" style={{ border: `1px solid ${BORDER}` }}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[12px] font-medium uppercase tracking-wider" style={{ color: MUTED }}>{label}</p>
+              <Icon style={{ width: 14, height: 14, color }} />
+            </div>
+            <p className="text-[26px] font-semibold tracking-tight" style={{ color: HEAD }}>{value}</p>
           </div>
         ))}
       </div>
 
       {/* Setup hint */}
-      <div className="rounded-2xl border px-5 py-4 flex items-start gap-3" style={{ background: "#fffbeb", borderColor: "#fde68a" }}>
-        <Cpu className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "#d97706" }} />
-        <div className="text-sm">
-          <p className="font-semibold mb-1" style={{ color: "#92400e" }}>Setting up a ZKTeco device</p>
-          <p style={{ color: "#b45309" }}>Go to <strong>Communication → ADMS Settings</strong> on your device, set the server IP and port <strong>8082</strong>, enable <strong>Real-time push</strong>. The device will appear here automatically.</p>
+      <div className="flex items-start gap-3 px-4 py-3 rounded-lg text-[13px]" style={{ background: "#FFFBEB", border: "1px solid #FDE68A" }}>
+        <Info style={{ width: 14, height: 14, color: "#D97706", flexShrink: 0, marginTop: 1 }} />
+        <div style={{ color: "#92400E" }}>
+          <span className="font-semibold">Setup:</span> On your ZKTeco device go to <strong>Communication → ADMS</strong>, set the server IP and port <strong>8082</strong>, enable real-time push. The device appears here automatically.
         </div>
       </div>
 
+      {/* Table */}
       {isLoading ? (
-        <div className="text-center py-12 text-slate-400 text-sm">Loading devices…</div>
+        <div className="bg-white rounded-lg p-8 text-center text-[13px]" style={{ border: `1px solid ${BORDER}`, color: MUTED }}>Loading devices…</div>
       ) : devices.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm py-16 text-center">
-          <WifiOff className="h-12 w-12 mx-auto text-slate-200 mb-3" />
-          <p className="font-semibold text-slate-600">No devices connected yet</p>
-          <p className="text-sm text-slate-400 mt-1">Configure your ZKTeco device to point to port 8082</p>
+        <div className="bg-white rounded-lg py-16 text-center" style={{ border: `1px solid ${BORDER}` }}>
+          <WifiOff style={{ width: 32, height: 32, color: "#E4E4E7", margin: "0 auto 12px" }} />
+          <p className="text-[13px] font-medium" style={{ color: "#52525B" }}>No devices connected</p>
+          <p className="text-[12px] mt-1" style={{ color: MUTED }}>Configure your ZKTeco device to point to port 8082</p>
         </div>
       ) : (
-        <>
-          {online.length > 0 && (
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Online ({online.length})</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {online.map(d => <DeviceCard key={d.id} device={d} onDelete={handleDelete} />)}
-              </div>
-            </div>
-          )}
-          {offline.length > 0 && (
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Offline ({offline.length})</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {offline.map(d => <DeviceCard key={d.id} device={d} onDelete={handleDelete} />)}
-              </div>
-            </div>
-          )}
-        </>
+        <div className="bg-white rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
+          <table className="w-full">
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${BORDER}`, background: "#FAFAFA" }}>
+                {["Device", "IP Address", "Last seen", "Punches", "Status", ""].map(h => (
+                  <th key={h} className="px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider" style={{ color: MUTED }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {devices.map(d => (
+                <DeviceRow key={d.id} device={d} onDelete={() => del.mutate({ id: d.id }, { onSuccess: () => qc.invalidateQueries({ queryKey: getListDevicesQueryKey() }) })} />
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

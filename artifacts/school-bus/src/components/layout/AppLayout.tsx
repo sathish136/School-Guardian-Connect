@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Users, Cpu, Plug, Fingerprint } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navigation = [
+const nav = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Students", href: "/students", icon: Users },
   { name: "Devices", href: "/devices", icon: Cpu },
@@ -13,68 +13,69 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
 
   return (
-    <div className="min-h-screen flex" style={{ background: "#f1f5f9" }}>
+    <div className="min-h-screen flex" style={{ background: "#F7F7F8" }}>
       {/* Sidebar */}
-      <aside className="w-60 flex flex-col fixed inset-y-0 z-10" style={{ background: "#0f172a" }}>
-        {/* Logo */}
-        <div className="h-16 flex items-center px-5 border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: "#0d9488" }}>
-              <Fingerprint className="h-4.5 w-4.5 text-white" style={{ height: "18px", width: "18px" }} />
+      <aside
+        className="w-56 flex flex-col fixed inset-y-0 z-10"
+        style={{ background: "#16161A", borderRight: "1px solid #1E1E24" }}
+      >
+        {/* Brand */}
+        <div className="px-4 pt-5 pb-4" style={{ borderBottom: "1px solid #1E1E24" }}>
+          <div className="flex items-center gap-2.5">
+            <div
+              className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: "#5E6AD2" }}
+            >
+              <Fingerprint className="text-white" style={{ width: 14, height: 14 }} />
             </div>
-            <div>
-              <span className="font-bold text-white text-[15px] tracking-tight">SafePass</span>
-              <p className="text-[10px] text-slate-500 leading-none mt-0.5">School Bus Tracker</p>
-            </div>
+            <span className="text-white font-semibold text-sm tracking-tight">SafePass</span>
           </div>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-5 space-y-0.5">
-          <p className="px-3 pb-3 text-[9px] font-bold text-slate-600 uppercase tracking-[0.15em]">Navigation</p>
-          {navigation.map((item) => {
-            const isActive = location === item.href;
+        <nav className="flex-1 px-2 py-3 space-y-0.5">
+          {nav.map((item) => {
+            const active = location === item.href;
             return (
               <Link key={item.name} href={item.href}>
-                <div className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium cursor-pointer transition-all duration-150",
-                  isActive
-                    ? "text-white"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
-                )}
-                style={isActive ? { background: "rgba(13,148,136,0.18)", color: "#2dd4bf" } : {}}
+                <div
+                  className="flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium cursor-pointer transition-colors duration-100"
+                  style={
+                    active
+                      ? { background: "rgba(255,255,255,0.07)", color: "#FFFFFF" }
+                      : { color: "#8B8B99" }
+                  }
+                  onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.color = "#D1D1DB"; }}
+                  onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.color = "#8B8B99"; }}
                 >
-                  <item.icon
-                    className="h-4 w-4 shrink-0"
-                    style={isActive ? { color: "#2dd4bf" } : {}}
-                  />
+                  <item.icon style={{ width: 15, height: 15, flexShrink: 0 }} />
                   <span>{item.name}</span>
-                  {isActive && (
-                    <div className="ml-auto h-1.5 w-1.5 rounded-full" style={{ background: "#2dd4bf" }} />
-                  )}
                 </div>
               </Link>
             );
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="px-4 py-4 border-t border-white/5">
+        {/* User */}
+        <div className="px-3 py-3.5" style={{ borderTop: "1px solid #1E1E24" }}>
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 text-white" style={{ background: "#0d9488" }}>
-              AD
+            <div
+              className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+              style={{ background: "#5E6AD2", color: "#fff" }}
+            >
+              A
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-white truncate">Admin</p>
-              <p className="text-[10px] text-slate-500 truncate">Administrator</p>
+              <p className="text-[12px] font-medium leading-tight text-white truncate">Admin</p>
+              <p className="text-[11px] leading-tight truncate" style={{ color: "#55555F" }}>Administrator</p>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Content */}
-      <div className="flex-1 ml-60 min-w-0">
-        <main className="min-h-screen py-8 px-8">{children}</main>
+      {/* Main */}
+      <div className="flex-1 ml-56">
+        <main className="min-h-screen px-8 py-8 max-w-6xl">{children}</main>
       </div>
     </div>
   );

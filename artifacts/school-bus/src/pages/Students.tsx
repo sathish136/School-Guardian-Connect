@@ -1,99 +1,85 @@
 import { useState } from "react";
 import {
   useListStudents, useCreateStudent, useUpdateStudent, useDeleteStudent,
-  getListStudentsQueryKey
+  getListStudentsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  Plus, Search, Pencil, Trash2, UserCheck, UserX, Fingerprint,
-  Phone, User, GraduationCap, LayoutGrid, List, BookOpen
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Search, Pencil, Trash2, UserCheck, UserX, Fingerprint, Phone, User, GraduationCap, LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { Student, StudentInput } from "@workspace/api-client-react";
-import { cn } from "@/lib/utils";
 
-const teal = "#0d9488";
+const ACCENT = "#5E6AD2";
+const BORDER = "#E8E8EC";
+const MUTED = "#8B8B99";
+const HEAD = "#0A0A0B";
 
-const AVATAR_PALETTE = [
-  { bg: "#f0fdfa", fg: "#0f766e" },
-  { bg: "#eff6ff", fg: "#1d4ed8" },
-  { bg: "#faf5ff", fg: "#7c3aed" },
-  { bg: "#fff7ed", fg: "#c2410c" },
-  { bg: "#f0fdf4", fg: "#15803d" },
-  { bg: "#fef3c7", fg: "#b45309" },
-  { bg: "#fff1f2", fg: "#be123c" },
+const PALETTE = [
+  { bg: "#EEF2FF", fg: "#4338CA" }, { bg: "#F0FDF4", fg: "#15803D" },
+  { bg: "#FFF7ED", fg: "#C2410C" }, { bg: "#FDF2F8", fg: "#9D174D" },
+  { bg: "#F0FDFA", fg: "#0F766E" }, { bg: "#FFFBEB", fg: "#B45309" },
+  { bg: "#FFF1F2", fg: "#BE123C" },
 ];
+const palette = (id: number) => PALETTE[id % PALETTE.length];
+const initials = (name: string) => name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
 
-function getInitials(name: string) {
-  return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
-}
-
-function getPalette(id: number) {
-  return AVATAR_PALETTE[id % AVATAR_PALETTE.length];
-}
-
-/* ─── Form ─────────────────────────────────────────────────────────────────── */
+/* ─── Form ─── */
 function StudentForm({ initial, onSubmit, onClose, isPending }: {
-  initial?: Student; onSubmit: (data: StudentInput) => void;
-  onClose: () => void; isPending: boolean;
+  initial?: Student; onSubmit: (d: StudentInput) => void; onClose: () => void; isPending: boolean;
 }) {
   const [form, setForm] = useState<StudentInput>({
     name: initial?.name ?? "", grade: initial?.grade ?? "",
     guardianName: initial?.guardianName ?? "", guardianPhone: initial?.guardianPhone ?? "",
-    biometricId: initial?.biometricId ?? "", busId: initial?.busId ?? null,
-    isActive: initial?.isActive ?? true,
+    biometricId: initial?.biometricId ?? "", busId: initial?.busId ?? null, isActive: initial?.isActive ?? true,
   });
-
-  const field = (id: keyof StudentInput, label: string, icon: React.ReactNode, extra?: Partial<React.InputHTMLAttributes<HTMLInputElement>>) => (
-    <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</Label>
-      <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">{icon}</span>
-        <Input id={id} className="pl-9 h-10 text-sm rounded-xl border-slate-200 focus:border-teal-400 focus:ring-teal-400"
-          value={(form[id] as string) ?? ""} onChange={e => setForm(p => ({ ...p, [id]: e.target.value }))} {...extra} />
-      </div>
-    </div>
-  );
+  const f = (key: keyof StudentInput) => (e: React.ChangeEvent<HTMLInputElement>) => setForm(p => ({ ...p, [key]: e.target.value }));
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-5">
-      <div className="grid grid-cols-2 gap-4">
-        {field("name", "Full Name", <User className="h-4 w-4" />, { placeholder: "e.g. John Doe", required: true })}
-        {field("grade", "Grade / Class", <GraduationCap className="h-4 w-4" />, { placeholder: "e.g. Grade 5A", required: true })}
-      </div>
-      <div className="border-t pt-4">
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Guardian</p>
-        <div className="grid grid-cols-2 gap-4">
-          {field("guardianName", "Name", <User className="h-4 w-4" />, { placeholder: "Guardian name", required: true })}
-          {field("guardianPhone", "Phone", <Phone className="h-4 w-4" />, { placeholder: "+1 555 000 0000", required: true })}
+    <form onSubmit={e => { e.preventDefault(); onSubmit(form); }} className="space-y-5 pt-1">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-[12px] font-medium" style={{ color: MUTED }}>Full name</Label>
+          <Input className="h-9 text-sm rounded-md" style={{ borderColor: BORDER }} placeholder="John Doe" value={form.name} onChange={f("name")} required />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-[12px] font-medium" style={{ color: MUTED }}>Grade / class</Label>
+          <Input className="h-9 text-sm rounded-md" style={{ borderColor: BORDER }} placeholder="Grade 5A" value={form.grade} onChange={f("grade")} required />
         </div>
       </div>
-      <div className="border-t pt-4">
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Biometric</p>
-        {field("biometricId", "Biometric ID", <Fingerprint className="h-4 w-4" />, { placeholder: "Device enrollment ID", required: true, className: "pl-9 h-10 font-mono text-sm rounded-xl border-slate-200" })}
+      <div className="pt-1" style={{ borderTop: `1px solid ${BORDER}` }}>
+        <p className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: MUTED }}>Guardian</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-[12px] font-medium" style={{ color: MUTED }}>Name</Label>
+            <Input className="h-9 text-sm rounded-md" style={{ borderColor: BORDER }} placeholder="Guardian name" value={form.guardianName} onChange={f("guardianName")} required />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[12px] font-medium" style={{ color: MUTED }}>Phone</Label>
+            <Input className="h-9 text-sm rounded-md" style={{ borderColor: BORDER }} placeholder="+1 555 000 0000" value={form.guardianPhone} onChange={f("guardianPhone")} required />
+          </div>
+        </div>
       </div>
-      <div className="flex items-center justify-between border-t pt-4">
-        <div className="flex items-center gap-2.5">
-          <Switch id="isActive" checked={form.isActive ?? true} onCheckedChange={v => setForm(p => ({ ...p, isActive: v }))} />
-          <Label htmlFor="isActive" className="text-sm text-slate-600">{form.isActive ? "Active" : "Inactive"}</Label>
+      <div className="pt-1" style={{ borderTop: `1px solid ${BORDER}` }}>
+        <p className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: MUTED }}>Biometric</p>
+        <div className="space-y-1.5">
+          <Label className="text-[12px] font-medium" style={{ color: MUTED }}>Biometric ID</Label>
+          <Input className="h-9 text-sm rounded-md font-mono" style={{ borderColor: BORDER }} placeholder="Device enrollment ID" value={form.biometricId} onChange={f("biometricId")} required />
+        </div>
+      </div>
+      <div className="flex items-center justify-between pt-1" style={{ borderTop: `1px solid ${BORDER}` }}>
+        <div className="flex items-center gap-2">
+          <Switch id="active" checked={form.isActive ?? true} onCheckedChange={v => setForm(p => ({ ...p, isActive: v }))} />
+          <Label htmlFor="active" className="text-[13px]" style={{ color: "#52525B" }}>Active</Label>
         </div>
         <div className="flex gap-2">
-          <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={onClose}>Cancel</Button>
-          <Button type="submit" size="sm" disabled={isPending} className="rounded-xl text-white"
-            style={{ background: teal }}>
-            {isPending ? "Saving..." : initial ? "Save Changes" : "Add Student"}
+          <Button type="button" variant="outline" size="sm" className="rounded-md h-8 text-[13px]" onClick={onClose}>Cancel</Button>
+          <Button type="submit" size="sm" disabled={isPending} className="rounded-md h-8 text-[13px] text-white border-0"
+            style={{ background: ACCENT }}>
+            {isPending ? "Saving…" : initial ? "Save changes" : "Add student"}
           </Button>
         </div>
       </div>
@@ -101,91 +87,47 @@ function StudentForm({ initial, onSubmit, onClose, isPending }: {
   );
 }
 
-/* ─── Card ──────────────────────────────────────────────────────────────────── */
-function StudentCard({ student, onEdit, onDelete, isDeleting }: {
-  student: Student; onEdit: () => void; onDelete: (id: number) => void; isDeleting: boolean;
-}) {
-  const { bg, fg } = getPalette(student.id);
+/* ─── Row ─── */
+function Row({ s, onEdit, onDelete, isDeleting }: { s: Student; onEdit: () => void; onDelete: () => void; isDeleting: boolean }) {
+  const { bg, fg } = palette(s.id);
   return (
-    <Card className={cn("border border-slate-100 shadow-sm hover:shadow-md transition-all rounded-2xl bg-white", !student.isActive && "opacity-60")}>
-      <CardContent className="p-5">
-        <div className="flex items-start gap-3 mb-4">
-          <div className="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0" style={{ background: bg, color: fg }}>
-            {getInitials(student.name)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-slate-900 text-sm truncate">{student.name}</p>
-            <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5"><GraduationCap className="h-3 w-3" />{student.grade}</p>
-          </div>
-          {student.isActive
-            ? <Badge className="border-0 text-[10px] px-1.5 shrink-0" style={{ background: "#f0fdfa", color: "#0f766e" }}><UserCheck className="h-2.5 w-2.5 mr-0.5" />Active</Badge>
-            : <Badge variant="outline" className="text-slate-400 text-[10px] px-1.5 shrink-0"><UserX className="h-2.5 w-2.5 mr-0.5" />Inactive</Badge>
-          }
-        </div>
-        <div className="space-y-1.5 mb-4">
-          <div className="flex items-center gap-2 text-xs text-slate-500"><User className="h-3 w-3 text-slate-300 shrink-0" />{student.guardianName}</div>
-          <div className="flex items-center gap-2 text-xs text-slate-500"><Phone className="h-3 w-3 text-slate-300 shrink-0" />{student.guardianPhone}</div>
-          <div className="flex items-center gap-2 text-xs">
-            <Fingerprint className="h-3 w-3 shrink-0" style={{ color: teal }} />
-            <code className="font-mono text-[10px] px-1.5 py-0.5 rounded-md tracking-wider" style={{ background: "#f0fdfa", color: "#0f766e" }}>{student.biometricId}</code>
-          </div>
-        </div>
-        <div className="flex gap-2 pt-3 border-t border-slate-100">
-          <Button variant="outline" size="sm" onClick={onEdit} className="flex-1 h-7 text-xs rounded-lg"><Pencil className="h-3 w-3 mr-1" />Edit</Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" disabled={isDeleting} className="h-7 px-2 text-red-400 hover:text-red-600 hover:border-red-200 rounded-lg"><Trash2 className="h-3 w-3" /></Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader><AlertDialogTitle>Remove {student.name}?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this student.</AlertDialogDescription></AlertDialogHeader>
-              <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => onDelete(student.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction></AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-/* ─── Row ───────────────────────────────────────────────────────────────────── */
-function StudentRow({ student, onEdit, onDelete, isDeleting }: {
-  student: Student; onEdit: () => void; onDelete: (id: number) => void; isDeleting: boolean;
-}) {
-  const { bg, fg } = getPalette(student.id);
-  return (
-    <tr className={cn("hover:bg-slate-50/80 transition-colors border-b border-slate-100", !student.isActive && "opacity-60")}>
+    <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
       <td className="px-5 py-3">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0" style={{ background: bg, color: fg }}>{getInitials(student.name)}</div>
+        <div className="flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style={{ background: bg, color: fg }}>{initials(s.name)}</div>
           <div>
-            <p className="text-sm font-semibold text-slate-800">{student.name}</p>
-            <p className="text-xs text-slate-400 flex items-center gap-1"><GraduationCap className="h-2.5 w-2.5" />{student.grade}</p>
+            <p className="text-[13px] font-medium" style={{ color: HEAD }}>{s.name}</p>
+            <p className="text-[12px] flex items-center gap-1" style={{ color: MUTED }}><GraduationCap style={{ width: 11, height: 11 }} />{s.grade}</p>
           </div>
         </div>
       </td>
       <td className="px-5 py-3">
-        <p className="text-sm text-slate-700">{student.guardianName}</p>
-        <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5"><Phone className="h-2.5 w-2.5" />{student.guardianPhone}</p>
+        <p className="text-[13px]" style={{ color: "#3F3F46" }}>{s.guardianName}</p>
+        <p className="text-[12px] flex items-center gap-1" style={{ color: MUTED }}><Phone style={{ width: 11, height: 11 }} />{s.guardianPhone}</p>
       </td>
       <td className="px-5 py-3">
-        <code className="font-mono text-xs px-2 py-1 rounded-lg tracking-wider" style={{ background: "#f0fdfa", color: "#0f766e" }}>{student.biometricId}</code>
+        <code className="text-[12px] font-mono px-2 py-0.5 rounded" style={{ background: "#F4F4F5", color: "#52525B" }}>{s.biometricId}</code>
       </td>
       <td className="px-5 py-3">
-        {student.isActive
-          ? <Badge className="border-0 text-xs" style={{ background: "#f0fdfa", color: "#0f766e" }}><UserCheck className="h-2.5 w-2.5 mr-1" />Active</Badge>
-          : <Badge variant="outline" className="text-slate-400 text-xs"><UserX className="h-2.5 w-2.5 mr-1" />Inactive</Badge>
+        {s.isActive
+          ? <span className="inline-flex items-center gap-1 text-[12px] font-medium px-2 py-0.5 rounded" style={{ background: "#F0FDF4", color: "#15803D" }}><UserCheck style={{ width: 11, height: 11 }} />Active</span>
+          : <span className="inline-flex items-center gap-1 text-[12px] font-medium px-2 py-0.5 rounded" style={{ background: "#F4F4F5", color: MUTED }}><UserX style={{ width: 11, height: 11 }} />Inactive</span>
         }
       </td>
-      <td className="px-5 py-3">
+      <td className="px-4 py-3">
         <div className="flex items-center gap-1 justify-end">
-          <Button variant="ghost" size="sm" onClick={onEdit} className="h-7 px-2 text-slate-400 hover:text-slate-700"><Pencil className="h-3.5 w-3.5" /></Button>
+          <button onClick={onEdit} className="h-7 w-7 rounded flex items-center justify-center hover:bg-gray-100 transition-colors" style={{ color: MUTED }}>
+            <Pencil style={{ width: 13, height: 13 }} />
+          </button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm" disabled={isDeleting} className="h-7 px-2 text-red-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></Button>
+              <button disabled={isDeleting} className="h-7 w-7 rounded flex items-center justify-center hover:bg-red-50 transition-colors" style={{ color: "#EF4444" }}>
+                <Trash2 style={{ width: 13, height: 13 }} />
+              </button>
             </AlertDialogTrigger>
             <AlertDialogContent>
-              <AlertDialogHeader><AlertDialogTitle>Remove {student.name}?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this student.</AlertDialogDescription></AlertDialogHeader>
-              <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => onDelete(student.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction></AlertDialogFooter>
+              <AlertDialogHeader><AlertDialogTitle>Remove {s.name}?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this student record.</AlertDialogDescription></AlertDialogHeader>
+              <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={onDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction></AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
         </div>
@@ -194,139 +136,157 @@ function StudentRow({ student, onEdit, onDelete, isDeleting }: {
   );
 }
 
-/* ─── Page ──────────────────────────────────────────────────────────────────── */
+/* ─── Card ─── */
+function Card({ s, onEdit, onDelete, isDeleting }: { s: Student; onEdit: () => void; onDelete: () => void; isDeleting: boolean }) {
+  const { bg, fg } = palette(s.id);
+  return (
+    <div className="bg-white rounded-lg p-4 hover:shadow-sm transition-shadow" style={{ border: `1px solid ${BORDER}`, opacity: s.isActive ? 1 : 0.6 }}>
+      <div className="flex items-start gap-3 mb-3">
+        <div className="h-9 w-9 rounded-full flex items-center justify-center text-[12px] font-bold shrink-0" style={{ background: bg, color: fg }}>{initials(s.name)}</div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold truncate" style={{ color: HEAD }}>{s.name}</p>
+          <p className="text-[12px]" style={{ color: MUTED }}>{s.grade}</p>
+        </div>
+        {s.isActive
+          ? <span className="text-[11px] font-medium px-1.5 py-0.5 rounded" style={{ background: "#F0FDF4", color: "#15803D" }}>Active</span>
+          : <span className="text-[11px] font-medium px-1.5 py-0.5 rounded" style={{ background: "#F4F4F5", color: MUTED }}>Inactive</span>
+        }
+      </div>
+      <div className="space-y-1.5 text-[12px] mb-3" style={{ color: MUTED }}>
+        <div className="flex items-center gap-1.5"><User style={{ width: 11, height: 11, flexShrink: 0 }} />{s.guardianName}</div>
+        <div className="flex items-center gap-1.5"><Phone style={{ width: 11, height: 11, flexShrink: 0 }} />{s.guardianPhone}</div>
+        <div className="flex items-center gap-1.5"><Fingerprint style={{ width: 11, height: 11, flexShrink: 0, color: ACCENT }} /><code style={{ background: "#F4F4F5", color: "#52525B" }} className="px-1.5 py-0.5 rounded font-mono text-[11px]">{s.biometricId}</code></div>
+      </div>
+      <div className="flex gap-1.5 pt-3" style={{ borderTop: `1px solid ${BORDER}` }}>
+        <button onClick={onEdit} className="flex-1 h-7 text-[12px] font-medium rounded flex items-center justify-center gap-1 hover:bg-gray-50 transition-colors" style={{ border: `1px solid ${BORDER}`, color: "#52525B" }}>
+          <Pencil style={{ width: 11, height: 11 }} /> Edit
+        </button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button disabled={isDeleting} className="h-7 px-2 rounded hover:bg-red-50 transition-colors" style={{ border: `1px solid ${BORDER}`, color: "#EF4444" }}>
+              <Trash2 style={{ width: 13, height: 13 }} />
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>Remove {s.name}?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this student.</AlertDialogDescription></AlertDialogHeader>
+            <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={onDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction></AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Page ─── */
 export default function Students() {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
-  const [view, setView] = useState<"grid" | "list">("list");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editStudent, setEditStudent] = useState<Student | null>(null);
+  const [view, setView] = useState<"list" | "grid">("list");
+  const [addOpen, setAddOpen] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
 
   const { data: students = [], isLoading } = useListStudents({ search: search || undefined });
   const create = useCreateStudent();
   const update = useUpdateStudent();
   const remove = useDeleteStudent();
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: getListStudentsQueryKey() });
+  const refresh = () => qc.invalidateQueries({ queryKey: getListStudentsQueryKey() });
 
-  const handleCreate = (data: StudentInput) => create.mutate({ data }, { onSuccess: () => { invalidate(); setDialogOpen(false); } });
-  const handleUpdate = (data: StudentInput) => {
-    if (!editStudent) return;
-    update.mutate({ id: editStudent.id, data }, { onSuccess: () => { invalidate(); setEditStudent(null); } });
-  };
-  const handleDelete = (id: number) => remove.mutate({ id }, { onSuccess: invalidate });
-
-  const active = students.filter(s => s.isActive);
-  const inactive = students.filter(s => !s.isActive);
-
-  const editDialog = (s: Student) => (
-    <DialogContent className="max-w-xl">
-      <DialogHeader><DialogTitle>Edit Student</DialogTitle></DialogHeader>
-      <StudentForm initial={s} onSubmit={handleUpdate} onClose={() => setEditStudent(null)} isPending={update.isPending} />
-    </DialogContent>
-  );
+  const editStudent = students.find(s => s.id === editId) ?? null;
 
   return (
-    <div className="space-y-5 max-w-6xl">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Students</h1>
-          <p className="text-sm text-slate-400 mt-0.5">
-            {students.length > 0 ? `${active.length} active · ${inactive.length} inactive` : "Manage enrolled students"}
+          <h1 className="text-[22px] font-semibold" style={{ color: HEAD }}>Students</h1>
+          <p className="text-[13px] mt-0.5" style={{ color: MUTED }}>
+            {students.length > 0 ? `${students.filter(s => s.isActive).length} active · ${students.filter(s => !s.isActive).length} inactive` : "Manage enrolled students"}
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="rounded-xl gap-1.5 text-white shadow-sm" style={{ background: teal }}>
-              <Plus className="h-4 w-4" /> Add Student
+            <Button size="sm" className="h-8 text-[13px] rounded-md text-white border-0 gap-1.5" style={{ background: ACCENT }}>
+              <Plus style={{ width: 14, height: 14 }} /> Add student
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-xl">
-            <DialogHeader><DialogTitle>New Student</DialogTitle></DialogHeader>
-            <StudentForm onSubmit={handleCreate} onClose={() => setDialogOpen(false)} isPending={create.isPending} />
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>New student</DialogTitle></DialogHeader>
+            <StudentForm onSubmit={d => create.mutate({ data: d }, { onSuccess: () => { refresh(); setAddOpen(false); } })} onClose={() => setAddOpen(false)} isPending={create.isPending} />
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-          <Input className="pl-9 h-9 text-sm rounded-xl border-slate-200" placeholder="Search students..." value={search} onChange={e => setSearch(e.target.value)} />
+      {/* Toolbar */}
+      <div className="flex items-center gap-2">
+        <div className="relative">
+          <Search style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 13, height: 13, color: MUTED }} />
+          <Input
+            className="pl-8 h-8 text-[13px] rounded-md w-56"
+            style={{ borderColor: BORDER }}
+            placeholder="Search students…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
-        <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
-          <Button variant="ghost" size="sm" onClick={() => setView("list")}
-            className={cn("h-7 w-7 p-0 rounded-lg", view === "list" && "shadow-sm text-white")}
-            style={view === "list" ? { background: teal } : {}}>
-            <List className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setView("grid")}
-            className={cn("h-7 w-7 p-0 rounded-lg", view === "grid" && "shadow-sm text-white")}
-            style={view === "grid" ? { background: teal } : {}}>
-            <LayoutGrid className="h-3.5 w-3.5" />
-          </Button>
+        <div className="flex rounded-md overflow-hidden" style={{ border: `1px solid ${BORDER}`, background: "#fff" }}>
+          {(["list", "grid"] as const).map(v => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className="h-8 w-8 flex items-center justify-center transition-colors"
+              style={view === v ? { background: ACCENT, color: "#fff" } : { color: MUTED }}
+            >
+              {v === "list" ? <List style={{ width: 14, height: 14 }} /> : <LayoutGrid style={{ width: 14, height: 14 }} />}
+            </button>
+          ))}
         </div>
       </div>
 
+      {/* Content */}
       {isLoading ? (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center text-slate-400 text-sm">Loading students…</div>
+        <div className="bg-white rounded-lg p-8 text-center text-[13px]" style={{ border: `1px solid ${BORDER}`, color: MUTED }}>Loading…</div>
       ) : students.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm py-20 text-center">
-          <div className="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4"><BookOpen className="h-6 w-6 text-slate-300" /></div>
-          <p className="font-semibold text-slate-700">No students yet</p>
-          <p className="text-sm text-slate-400 mt-1 mb-5">Add your first student to start tracking</p>
-          <Button size="sm" onClick={() => setDialogOpen(true)} className="rounded-xl text-white" style={{ background: teal }}>
-            <Plus className="h-4 w-4 mr-1.5" /> Add First Student
+        <div className="bg-white rounded-lg py-16 text-center" style={{ border: `1px solid ${BORDER}` }}>
+          <p className="text-[13px] font-medium" style={{ color: "#52525B" }}>No students yet</p>
+          <p className="text-[12px] mt-1 mb-4" style={{ color: MUTED }}>Add your first student to start tracking</p>
+          <Button size="sm" onClick={() => setAddOpen(true)} className="h-8 text-[13px] rounded-md text-white border-0" style={{ background: ACCENT }}>
+            <Plus style={{ width: 13, height: 13, marginRight: 4 }} /> Add student
           </Button>
         </div>
       ) : view === "list" ? (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-white rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
+          <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100" style={{ background: "#f8fafc" }}>
-                <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Student</th>
-                <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Guardian</th>
-                <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Biometric ID</th>
-                <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Status</th>
-                <th className="px-5 py-3" />
+              <tr style={{ borderBottom: `1px solid ${BORDER}`, background: "#FAFAFA" }}>
+                {["Student", "Guardian", "Biometric ID", "Status", ""].map(h => (
+                  <th key={h} className="px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider" style={{ color: MUTED }}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {students.map(s => (
-                <Dialog key={s.id} open={editStudent?.id === s.id} onOpenChange={open => setEditStudent(open ? s : null)}>
-                  <StudentRow student={s} onEdit={() => setEditStudent(s)} onDelete={handleDelete} isDeleting={remove.isPending} />
-                  {editDialog(s)}
+                <Dialog key={s.id} open={editId === s.id} onOpenChange={open => setEditId(open ? s.id : null)}>
+                  <Row s={s} onEdit={() => setEditId(s.id)} onDelete={() => remove.mutate({ id: s.id }, { onSuccess: refresh })} isDeleting={remove.isPending} />
+                  <DialogContent className="max-w-lg">
+                    <DialogHeader><DialogTitle>Edit student</DialogTitle></DialogHeader>
+                    {editStudent && <StudentForm initial={editStudent} onSubmit={d => update.mutate({ id: editStudent.id, data: d }, { onSuccess: () => { refresh(); setEditId(null); } })} onClose={() => setEditId(null)} isPending={update.isPending} />}
+                  </DialogContent>
                 </Dialog>
               ))}
             </tbody>
           </table>
         </div>
       ) : (
-        <div className="space-y-5">
-          {active.length > 0 && (
-            <div>
-              {inactive.length > 0 && <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Active ({active.length})</p>}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {active.map(s => (
-                  <Dialog key={s.id} open={editStudent?.id === s.id} onOpenChange={open => setEditStudent(open ? s : null)}>
-                    <StudentCard student={s} onEdit={() => setEditStudent(s)} onDelete={handleDelete} isDeleting={remove.isPending} />
-                    {editDialog(s)}
-                  </Dialog>
-                ))}
-              </div>
-            </div>
-          )}
-          {inactive.length > 0 && (
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Inactive ({inactive.length})</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {inactive.map(s => (
-                  <Dialog key={s.id} open={editStudent?.id === s.id} onOpenChange={open => setEditStudent(open ? s : null)}>
-                    <StudentCard student={s} onEdit={() => setEditStudent(s)} onDelete={handleDelete} isDeleting={remove.isPending} />
-                    {editDialog(s)}
-                  </Dialog>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+          {students.map(s => (
+            <Dialog key={s.id} open={editId === s.id} onOpenChange={open => setEditId(open ? s.id : null)}>
+              <Card s={s} onEdit={() => setEditId(s.id)} onDelete={() => remove.mutate({ id: s.id }, { onSuccess: refresh })} isDeleting={remove.isPending} />
+              <DialogContent className="max-w-lg">
+                <DialogHeader><DialogTitle>Edit student</DialogTitle></DialogHeader>
+                {editStudent && <StudentForm initial={editStudent} onSubmit={d => update.mutate({ id: editStudent.id, data: d }, { onSuccess: () => { refresh(); setEditId(null); } })} onClose={() => setEditId(null)} isPending={update.isPending} />}
+              </DialogContent>
+            </Dialog>
+          ))}
         </div>
       )}
     </div>

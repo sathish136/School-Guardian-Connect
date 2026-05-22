@@ -1,31 +1,25 @@
 import { useGetDashboardStats, useGetRecentActivity } from "@workspace/api-client-react";
-import {
-  Users, Fingerprint, MessageSquare, ArrowUpRight,
-  LogIn, LogOut, CheckCircle2, Clock, AlertCircle
-} from "lucide-react";
+import { Users, Fingerprint, MessageSquare, ArrowUpRight, LogIn, LogOut, CheckCircle2, Clock } from "lucide-react";
 import { format, isToday } from "date-fns";
 
-const teal = "#0d9488";
-const tealLight = "#ccfbf1";
-const tealDark = "#0f766e";
+const ACCENT = "#5E6AD2";
 
-function StatCard({
-  label, value, icon: Icon, bg, iconColor, sub
-}: {
-  label: string; value: number | string; icon: React.ElementType;
-  bg: string; iconColor: string; sub?: string;
+function Stat({ label, value, sub, icon: Icon, iconColor }: {
+  label: string; value: string | number; sub?: string;
+  icon: React.ElementType; iconColor: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex flex-col gap-4">
+    <div
+      className="bg-white rounded-lg px-5 py-4 flex flex-col gap-3"
+      style={{ border: "1px solid #E8E8EC" }}
+    >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
-        <div className="p-2 rounded-xl" style={{ background: bg }}>
-          <Icon className="h-4 w-4" style={{ color: iconColor }} />
-        </div>
+        <p className="text-[12px] font-medium uppercase tracking-wider" style={{ color: "#8B8B99" }}>{label}</p>
+        <Icon style={{ width: 15, height: 15, color: iconColor }} />
       </div>
       <div>
-        <p className="text-3xl font-bold text-slate-900 tracking-tight">{value}</p>
-        {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
+        <p className="text-[28px] font-semibold tracking-tight leading-none" style={{ color: "#0A0A0B" }}>{value}</p>
+        {sub && <p className="text-[12px] mt-1.5" style={{ color: "#8B8B99" }}>{sub}</p>}
       </div>
     </div>
   );
@@ -33,147 +27,119 @@ function StatCard({
 
 export default function Dashboard() {
   const { data: stats } = useGetDashboardStats();
-  const { data: activity, isLoading: activityLoading } = useGetRecentActivity({ limit: 15 });
-
+  const { data: activity = [], isLoading } = useGetRecentActivity({ limit: 20 });
   const now = new Date();
-  const greeting =
-    now.getHours() < 12 ? "Good morning" :
-    now.getHours() < 17 ? "Good afternoon" : "Good evening";
+  const hour = now.getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="space-y-7 max-w-5xl">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-slate-400 font-medium">{greeting}, Admin</p>
-          <h1 className="text-2xl font-bold text-slate-900 mt-0.5">Dashboard</h1>
+          <p className="text-[13px]" style={{ color: "#8B8B99" }}>{greeting}, Admin</p>
+          <h1 className="text-[22px] font-semibold mt-0.5" style={{ color: "#0A0A0B" }}>Dashboard</h1>
         </div>
-        <div className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-semibold border"
-          style={{ background: "#f0fdf4", color: "#16a34a", borderColor: "#bbf7d0" }}>
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#4ade80" }} />
-            <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: "#16a34a" }} />
+        <div
+          className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-full"
+          style={{ background: "#F0FDF4", color: "#16A34A", border: "1px solid #BBF7D0" }}
+        >
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
           </span>
-          System Live
+          Live
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Students"
-          value={stats?.totalStudents ?? 0}
-          icon={Users}
-          bg="#f0fdfa"
-          iconColor={teal}
-          sub="enrolled"
-        />
-        <StatCard
-          label="Today's Punches"
-          value={stats?.todayScans ?? 0}
-          icon={Fingerprint}
-          bg="#faf5ff"
-          iconColor="#7c3aed"
-          sub={`${stats?.todayBoardings ?? 0} in · ${stats?.todayAlightings ?? 0} out`}
-        />
-        <StatCard
-          label="Messages Sent"
-          value={stats?.smsSentToday ?? 0}
-          icon={MessageSquare}
-          bg="#f0fdf4"
-          iconColor="#16a34a"
-          sub={stats?.smsFailedToday ? `${stats.smsFailedToday} failed` : "all delivered"}
-        />
-        <StatCard
-          label="On Bus Now"
-          value={stats?.studentsOnBus ?? 0}
-          icon={ArrowUpRight}
-          bg="#fffbeb"
-          iconColor="#d97706"
-          sub="active"
-        />
+      <div className="grid grid-cols-4 gap-3">
+        <Stat label="Students" value={stats?.totalStudents ?? 0} sub="enrolled" icon={Users} iconColor={ACCENT} />
+        <Stat label="Today's Punches" value={stats?.todayScans ?? 0} sub={`${stats?.todayBoardings ?? 0} in · ${stats?.todayAlightings ?? 0} out`} icon={Fingerprint} iconColor="#8B8B99" />
+        <Stat label="Messages Sent" value={stats?.smsSentToday ?? 0} sub={stats?.smsFailedToday ? `${stats.smsFailedToday} failed` : "all delivered"} icon={MessageSquare} iconColor="#16A34A" />
+        <Stat label="On Bus Now" value={stats?.studentsOnBus ?? 0} sub="active" icon={ArrowUpRight} iconColor="#D97706" />
       </div>
 
       {/* Activity */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+      <div className="bg-white rounded-lg overflow-hidden" style={{ border: "1px solid #E8E8EC" }}>
+        <div
+          className="px-5 py-3.5 flex items-center justify-between"
+          style={{ borderBottom: "1px solid #E8E8EC" }}
+        >
           <div>
-            <h2 className="text-sm font-bold text-slate-800">Recent Activity</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Live biometric punch log</p>
+            <p className="text-[13px] font-semibold" style={{ color: "#0A0A0B" }}>Recent Activity</p>
+            <p className="text-[12px] mt-0.5" style={{ color: "#8B8B99" }}>Live biometric punch log</p>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <Clock className="h-3.5 w-3.5" />
+          <span className="text-[12px]" style={{ color: "#8B8B99" }}>
+            <Clock style={{ display: "inline", width: 12, height: 12, marginRight: 4, verticalAlign: "middle" }} />
             {format(now, "MMM d, h:mm a")}
-          </div>
+          </span>
         </div>
 
-        {activityLoading ? (
-          <div className="divide-y divide-slate-50">
+        {isLoading ? (
+          <div className="divide-y" style={{ borderColor: "#F4F4F5" }}>
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="px-6 py-3.5 flex items-center gap-3 animate-pulse">
-                <div className="h-9 w-9 rounded-full bg-slate-100 shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3 bg-slate-100 rounded w-40" />
-                  <div className="h-2.5 bg-slate-100 rounded w-28" />
+              <div key={i} className="px-5 py-3 flex gap-3 animate-pulse">
+                <div className="h-7 w-7 rounded-full shrink-0" style={{ background: "#F4F4F5" }} />
+                <div className="flex-1 space-y-2 pt-1">
+                  <div className="h-3 rounded w-40" style={{ background: "#F4F4F5" }} />
+                  <div className="h-2.5 rounded w-28" style={{ background: "#F4F4F5" }} />
                 </div>
               </div>
             ))}
           </div>
-        ) : activity && activity.length > 0 ? (
-          <div className="divide-y divide-slate-50">
-            {activity.map((item) => {
+        ) : activity.length === 0 ? (
+          <div className="py-16 text-center">
+            <p className="text-[13px] font-medium" style={{ color: "#52525B" }}>No activity yet today</p>
+            <p className="text-[12px] mt-1" style={{ color: "#A1A1AA" }}>Biometric punches will appear here in real time</p>
+          </div>
+        ) : (
+          <div>
+            {activity.map((item, i) => {
               const isBoard = item.scanType === "board";
               const scannedAt = new Date(item.scannedAt);
-              const timeLabel = isToday(scannedAt)
-                ? format(scannedAt, "h:mm a")
-                : format(scannedAt, "MMM d, h:mm a");
+              const timeLabel = isToday(scannedAt) ? format(scannedAt, "h:mm a") : format(scannedAt, "MMM d, h:mm a");
               const initials = item.studentName?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() ?? "?";
-
               return (
-                <div key={item.id} className="px-6 py-3.5 flex items-center gap-4 hover:bg-slate-50/70 transition-colors">
-                  <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
-                    style={isBoard
-                      ? { background: "#f0fdfa", color: teal }
-                      : { background: "#fff1f2", color: "#e11d48" }
-                    }>
+                <div
+                  key={item.id}
+                  className="px-5 py-3 flex items-center gap-3"
+                  style={{ borderBottom: i < activity.length - 1 ? "1px solid #F4F4F5" : "none" }}
+                >
+                  <div
+                    className="h-7 w-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+                    style={isBoard ? { background: "#EEF2FF", color: ACCENT } : { background: "#FFF1F2", color: "#E11D48" }}
+                  >
                     {initials}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-slate-800 truncate">{item.studentName}</span>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                      <span className="text-[13px] font-medium truncate" style={{ color: "#0A0A0B" }}>{item.studentName}</span>
+                      <span
+                        className="inline-flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded"
                         style={isBoard
-                          ? { background: "#f0fdfa", color: teal }
-                          : { background: "#fff1f2", color: "#e11d48" }
-                        }>
-                        {isBoard ? <LogIn className="h-2.5 w-2.5" /> : <LogOut className="h-2.5 w-2.5" />}
+                          ? { background: "#EEF2FF", color: ACCENT }
+                          : { background: "#FFF1F2", color: "#E11D48" }}
+                      >
+                        {isBoard ? <LogIn style={{ width: 10, height: 10 }} /> : <LogOut style={{ width: 10, height: 10 }} />}
                         {isBoard ? "Boarded" : "Alighted"}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      {item.busNumber ? `Bus ${item.busNumber}` : "No bus"}
-                      {item.grade ? ` · ${item.grade}` : ""}
+                    <p className="text-[12px] mt-0.5" style={{ color: "#8B8B99" }}>
+                      {item.busNumber ? `Bus ${item.busNumber}` : "—"}{item.grade ? ` · ${item.grade}` : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     {item.smsSent && (
-                      <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: "#16a34a" }}>
-                        <CheckCircle2 className="h-3 w-3" /> Sent
+                      <span className="flex items-center gap-1 text-[11px] font-medium" style={{ color: "#16A34A" }}>
+                        <CheckCircle2 style={{ width: 11, height: 11 }} /> Sent
                       </span>
                     )}
-                    <span className="text-xs text-slate-400">{timeLabel}</span>
+                    <span className="text-[12px]" style={{ color: "#A1A1AA" }}>{timeLabel}</span>
                   </div>
                 </div>
               );
             })}
-          </div>
-        ) : (
-          <div className="py-20 text-center">
-            <div className="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="h-6 w-6 text-slate-300" />
-            </div>
-            <p className="text-sm font-semibold text-slate-500">No activity yet today</p>
-            <p className="text-xs text-slate-400 mt-1.5">Biometric punches will appear here in real time</p>
           </div>
         )}
       </div>
