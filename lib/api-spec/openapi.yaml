@@ -923,13 +923,13 @@ components:
 
     ScanInput:
       type: object
-      required: [biometricId, tripId, scanType]
+      required: [biometricId, scanType]
       properties:
         biometricId:
           type: string
           minLength: 1
         tripId:
-          type: integer
+          type: ["integer", "null"]
         scanType:
           type: string
           enum: [board, alight]

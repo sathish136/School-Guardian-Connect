@@ -497,7 +497,7 @@ export const ListScansResponse = zod.array(ListScansResponseItem)
 
 export const RecordScanBody = zod.object({
   "biometricId": zod.string().min(1),
-  "tripId": zod.number(),
+  "tripId": zod.number().nullish(),
   "scanType": zod.enum(['board', 'alight']),
   "location": zod.string().nullish()
 })

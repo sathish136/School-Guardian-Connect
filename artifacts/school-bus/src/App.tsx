@@ -8,6 +8,7 @@ import Dashboard from "@/pages/Dashboard";
 import Students from "@/pages/Students";
 import Devices from "@/pages/Devices";
 import SmsPage from "@/pages/Sms";
+import ScanPage from "@/pages/Scan";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ function Router() {
         <Route path="/students" component={Students} />
         <Route path="/devices" component={Devices} />
         <Route path="/sms" component={SmsPage} />
+        <Route path="/scan" component={ScanPage} />
         <Route component={NotFound} />
       </Switch>
     </AppLayout>

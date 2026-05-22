@@ -199,7 +199,8 @@ export const ScanInputScanType = {
 export interface ScanInput {
   /** @minLength 1 */
   biometricId: string;
-  tripId: number;
+  /** @nullable */
+  tripId?: number | null;
   scanType: ScanInputScanType;
   /** @nullable */
   location?: string | null;

@@ -2,10 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { scansTable, studentsTable, tripsTable, busesTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
-import {
-  ListScansQueryParams,
-  RecordScanBody,
-} from "@workspace/api-zod";
+import { ListScansQueryParams, RecordScanBody } from "@workspace/api-zod";
 import { sendSms } from "../lib/sms";
 
 const router = Router();
@@ -49,57 +46,47 @@ router.post("/scans", async (req, res) => {
     return;
   }
 
-  const { biometricId, tripId, scanType, location } = body.data;
+  const { biometricId, scanType, location } = body.data;
 
+  // Look up student by biometric ID
   const [student] = await db
     .select()
     .from(studentsTable)
     .where(eq(studentsTable.biometricId, biometricId));
 
   if (!student) {
-    res.status(400).json({ error: "Student not found for biometric ID" });
+    res.status(400).json({ error: `No student found with biometric ID "${biometricId}"` });
     return;
   }
 
-  const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
-  if (!trip) {
-    res.status(400).json({ error: "Trip not found" });
+  if (!student.isActive) {
+    res.status(400).json({ error: `Student "${student.name}" is inactive` });
     return;
   }
 
-  const [bus] = await db.select().from(busesTable).where(eq(busesTable.id, trip.busId));
-
+  // Record the scan (tripId is optional — not required without bus/trip management)
   const [scan] = await db.insert(scansTable).values({
     studentId: student.id,
-    tripId,
+    tripId: null,
     scanType,
     location: location ?? null,
     smsSent: false,
   }).returning();
 
-  // Update trip boarding/alighting counts
-  if (scanType === "board") {
-    await db.update(tripsTable).set({ totalBoardings: (trip.totalBoardings || 0) + 1 }).where(eq(tripsTable.id, tripId));
-  } else {
-    await db.update(tripsTable).set({ totalAlightings: (trip.totalAlightings || 0) + 1 }).where(eq(tripsTable.id, tripId));
-  }
-
-  // Build and send SMS
+  // Build notification message
   const now = new Date();
   const timeStr = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
   const dateStr = now.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
-  const busNumber = bus?.busNumber ?? "Unknown";
 
   let travelDurationMinutes: number | null = null;
   if (scanType === "alight") {
-    const boardScan = await db
+    const recentScans = await db
       .select()
       .from(scansTable)
       .where(eq(scansTable.studentId, student.id))
       .orderBy(desc(scansTable.scannedAt))
       .limit(10);
-
-    const lastBoard = boardScan.find(s => s.scanType === "board" && s.tripId === tripId);
+    const lastBoard = recentScans.find(s => s.scanType === "board" && s.id !== scan.id);
     if (lastBoard) {
       travelDurationMinutes = Math.round((now.getTime() - lastBoard.scannedAt.getTime()) / 60000);
     }
@@ -107,10 +94,10 @@ router.post("/scans", async (req, res) => {
 
   let smsMessage: string;
   if (scanType === "board") {
-    smsMessage = `Dear ${student.guardianName}, your child ${student.name} has BOARDED Bus ${busNumber} at ${timeStr} on ${dateStr}. They are on their way safely.`;
+    smsMessage = `Dear ${student.guardianName}, your child ${student.name} has BOARDED the school bus at ${timeStr} on ${dateStr}. They are on their way safely.`;
   } else {
     const durationText = travelDurationMinutes !== null ? ` Travel time: ${travelDurationMinutes} min.` : "";
-    smsMessage = `Dear ${student.guardianName}, your child ${student.name} has ALIGHTED from Bus ${busNumber} at ${timeStr} on ${dateStr}.${durationText} They have arrived safely.`;
+    smsMessage = `Dear ${student.guardianName}, your child ${student.name} has ALIGHTED from the school bus at ${timeStr} on ${dateStr}.${durationText} They have arrived safely.`;
   }
 
   const smsSent = await sendSms(student.id, student.guardianPhone, smsMessage);
@@ -122,14 +109,14 @@ router.post("/scans", async (req, res) => {
   res.status(201).json({
     id: scan.id,
     studentId: student.id,
-    tripId,
+    tripId: null,
     scanType,
     scannedAt: scan.scannedAt.toISOString(),
     location: scan.location,
     smsSent,
     studentName: student.name,
     guardianPhone: student.guardianPhone,
-    busNumber,
+    busNumber: null,
   });
 });
 

@@ -1,10 +1,11 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, Cpu, Plug, Fingerprint } from "lucide-react";
+import { LayoutDashboard, Users, Cpu, Plug, Fingerprint, ScanLine } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Students", href: "/students", icon: Users },
+  { name: "Scan", href: "/scan", icon: ScanLine },
   { name: "Devices", href: "/devices", icon: Cpu },
   { name: "Integration", href: "/sms", icon: Plug },
 ];
