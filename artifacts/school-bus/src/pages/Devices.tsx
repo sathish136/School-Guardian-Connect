@@ -5,7 +5,7 @@ import type { Device } from "@workspace/api-client-react";
 import { Cpu, Wifi, WifiOff, Trash2, RefreshCw, Fingerprint, Clock, Info } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-const ACCENT = "#5E6AD2";
+const ACCENT = "#F59E0B";
 const BORDER = "#E8E8EC";
 const MUTED = "#8B8B99";
 const HEAD = "#0A0A0B";

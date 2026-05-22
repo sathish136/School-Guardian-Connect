@@ -4,15 +4,15 @@ import { LogIn, LogOut, CheckCircle2, Minus, Clock, CalendarDays, ChevronLeft, C
 import { useState } from "react";
 import type { ScanEvent } from "@workspace/api-client-react";
 
-const ACCENT = "#5E6AD2";
-const BORDER = "#E8E8EC";
-const MUTED = "#8B8B99";
-const HEAD = "#0A0A0B";
+const ACCENT = "#F59E0B";
+const BORDER = "#E2E8F0";
+const MUTED = "#64748B";
+const HEAD = "#0F172A";
 
 const PALETTE = [
-  { bg: "#EEF2FF", fg: "#4338CA" }, { bg: "#F0FDF4", fg: "#15803D" },
-  { bg: "#FFF7ED", fg: "#C2410C" }, { bg: "#FDF2F8", fg: "#9D174D" },
-  { bg: "#F0FDFA", fg: "#0F766E" }, { bg: "#FFFBEB", fg: "#B45309" },
+  { bg: "#FEF3C7", fg: "#92400E" }, { bg: "#F0FDF4", fg: "#15803D" },
+  { bg: "#EEF2FF", fg: "#4338CA" }, { bg: "#FDF2F8", fg: "#9D174D" },
+  { bg: "#F0FDFA", fg: "#0F766E" }, { bg: "#FFF7ED", fg: "#C2410C" },
   { bg: "#FFF1F2", fg: "#BE123C" },
 ];
 const palette = (id: number) => PALETTE[id % PALETTE.length];

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,12 +11,13 @@ import Devices from "@/pages/Devices";
 import SmsPage from "@/pages/Sms";
 import ScanPage from "@/pages/Scan";
 import AttendancePage from "@/pages/Attendance";
+import Login from "@/pages/Login";
 
 const queryClient = new QueryClient();
 
-function Router() {
+function Router({ onLogout }: { onLogout: () => void }) {
   return (
-    <AppLayout>
+    <AppLayout onLogout={onLogout}>
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/students" component={Students} />
@@ -30,11 +32,22 @@ function Router() {
 }
 
 function App() {
+  const [authed, setAuthed] = useState(() => localStorage.getItem("saferide_auth") === "true");
+
+  function handleLogin() {
+    setAuthed(true);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("saferide_auth");
+    setAuthed(false);
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
+          {authed ? <Router onLogout={handleLogout} /> : <Login onLogin={handleLogin} />}
         </WouterRouter>
         <Toaster />
       </TooltipProvider>

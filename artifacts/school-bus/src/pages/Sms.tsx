@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import type { SmsGatewayInput, WhatsappGatewayInput } from "@workspace/api-client-react";
 
-const ACCENT = "#5E6AD2";
+const ACCENT = "#F59E0B";
 const BORDER = "#E8E8EC";
 const MUTED = "#8B8B99";
 const HEAD = "#0A0A0B";

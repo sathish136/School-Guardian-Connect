@@ -4,10 +4,10 @@ import { Fingerprint, LogIn, LogOut, CheckCircle2, XCircle, Search, ArrowRight, 
 import { format } from "date-fns";
 import type { ScanEvent } from "@workspace/api-client-react";
 
-const ACCENT = "#5E6AD2";
-const BORDER = "#E8E8EC";
-const MUTED = "#8B8B99";
-const HEAD = "#0A0A0B";
+const ACCENT = "#F59E0B";
+const BORDER = "#E2E8F0";
+const MUTED = "#64748B";
+const HEAD = "#0F172A";
 
 type ScanType = "board" | "alight";
 
