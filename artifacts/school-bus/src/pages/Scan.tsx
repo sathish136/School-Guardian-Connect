@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useListStudents, useRecordScan } from "@workspace/api-client-react";
-import { Fingerprint, LogIn, LogOut, CheckCircle2, XCircle, Search, ArrowRight, Clock } from "lucide-react";
-import { format } from "date-fns";
+import { useEffect, useState } from "react";
+import { useListScans } from "@workspace/api-client-react";
+import { Activity, LogIn, LogOut, CheckCircle2, RefreshCw, Wifi, Clock, Fingerprint, Bus } from "lucide-react";
+import { format, isToday } from "date-fns";
 import type { ScanEvent } from "@workspace/api-client-react";
 
 const ACCENT = "#F59E0B";
@@ -9,231 +9,210 @@ const BORDER = "#E2E8F0";
 const MUTED = "#64748B";
 const HEAD = "#0F172A";
 
-type ScanType = "board" | "alight";
-
-interface ScanResult {
-  event: ScanEvent;
-  timestamp: Date;
-}
+const PALETTE = [
+  { bg: "#FEF3C7", fg: "#92400E" }, { bg: "#F0FDF4", fg: "#15803D" },
+  { bg: "#EEF2FF", fg: "#4338CA" }, { bg: "#FDF2F8", fg: "#9D174D" },
+  { bg: "#F0FDFA", fg: "#0F766E" }, { bg: "#FFF7ED", fg: "#C2410C" },
+  { bg: "#FFF1F2", fg: "#BE123C" },
+];
+const palette = (id: number) => PALETTE[id % PALETTE.length];
+const initials = (name: string | null | undefined) =>
+  (name ?? "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
 
 export default function ScanPage() {
-  const [biometricId, setBiometricId] = useState("");
-  const [scanType, setScanType] = useState<ScanType>("board");
-  const [results, setResults] = useState<ScanResult[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const { data: scans = [], isLoading, refetch, dataUpdatedAt } = useListScans({ limit: 100 });
 
-  const { data: students = [] } = useListStudents({});
-  const record = useRecordScan();
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const t = setInterval(() => refetch(), 8_000);
+    return () => clearInterval(t);
+  }, [autoRefresh, refetch]);
 
-  // Match biometric ID to student for preview
-  const matched = students.find(s => s.biometricId.toLowerCase() === biometricId.toLowerCase());
+  const todayScans = scans.filter(s => isToday(new Date(s.scannedAt)));
+  const boardCount = todayScans.filter(s => s.scanType === "board").length;
+  const alightCount = todayScans.filter(s => s.scanType === "alight").length;
+  const smsSentCount = todayScans.filter(s => s.smsSent).length;
 
-  const handleScan = () => {
-    if (!biometricId.trim()) return;
-    setError(null);
-    record.mutate(
-      { data: { biometricId: biometricId.trim(), scanType } },
-      {
-        onSuccess: (event) => {
-          setResults(prev => [{ event, timestamp: new Date() }, ...prev.slice(0, 19)]);
-          setBiometricId("");
-          setError(null);
-        },
-        onError: (err: unknown) => {
-          const msg = err && typeof err === "object" && "message" in err
-            ? (err as { message: string }).message
-            : "Scan failed";
-          setError(msg);
-        },
-      }
-    );
-  };
-
-  const handleKey = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") handleScan();
-  };
+  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-[22px] font-semibold" style={{ color: HEAD }}>Biometric Scan</h1>
-        <p className="text-[13px] mt-0.5" style={{ color: MUTED }}>
-          Simulate a biometric punch — enter an enrollment ID and submit to trigger the notification
-        </p>
-      </div>
-
-      {/* Scanner card */}
-      <div className="bg-white rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
-        {/* Type selector */}
-        <div className="grid grid-cols-2 divide-x" style={{ borderBottom: `1px solid ${BORDER}`, divideColor: BORDER }}>
-          {(["board", "alight"] as ScanType[]).map(t => (
-            <button
-              key={t}
-              onClick={() => setScanType(t)}
-              className="flex items-center justify-center gap-2 py-3.5 text-[13px] font-semibold transition-colors"
-              style={scanType === t
-                ? { background: t === "board" ? "#EEF2FF" : "#FFF1F2", color: t === "board" ? ACCENT : "#BE123C" }
-                : { background: "#FAFAFA", color: MUTED }
-              }
-            >
-              {t === "board"
-                ? <LogIn style={{ width: 15, height: 15 }} />
-                : <LogOut style={{ width: 15, height: 15 }} />
-              }
-              {t === "board" ? "Board" : "Alight"}
-            </button>
-          ))}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-[24px] font-bold" style={{ color: HEAD }}>Live Monitor</h1>
+          <p className="text-[13px] mt-0.5 font-medium" style={{ color: MUTED }}>
+            Real-time biometric scan feed from connected ZK devices
+          </p>
         </div>
-
-        {/* Input area */}
-        <div className="px-6 py-6">
-          <label className="block text-[12px] font-semibold uppercase tracking-wider mb-2" style={{ color: MUTED }}>
-            Biometric ID / Enrollment ID
-          </label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Fingerprint
-                style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: biometricId ? ACCENT : MUTED }}
-              />
-              <input
-                type="text"
-                className="w-full h-10 pl-9 pr-3 rounded-md text-[13px] font-mono outline-none transition-colors"
-                style={{ border: `1px solid ${biometricId ? ACCENT : BORDER}`, color: HEAD, background: "#fff" }}
-                placeholder="e.g. BIO-001"
-                value={biometricId}
-                onChange={e => { setBiometricId(e.target.value); setError(null); }}
-                onKeyDown={handleKey}
-                autoFocus
-              />
-            </div>
-            <button
-              onClick={handleScan}
-              disabled={!biometricId.trim() || record.isPending}
-              className="flex items-center gap-1.5 h-10 px-4 rounded-md text-[13px] font-semibold text-white transition-opacity"
-              style={{ background: scanType === "board" ? ACCENT : "#BE123C", opacity: !biometricId.trim() || record.isPending ? 0.5 : 1 }}
-            >
-              {record.isPending ? "Scanning…" : (
-                <>
-                  {scanType === "board" ? <LogIn style={{ width: 14, height: 14 }} /> : <LogOut style={{ width: 14, height: 14 }} />}
-                  {scanType === "board" ? "Board" : "Alight"}
-                  <ArrowRight style={{ width: 13, height: 13 }} />
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Student preview */}
-          {biometricId && (
-            <div className="mt-3 flex items-center gap-2 text-[12px]" style={{ color: matched ? "#15803D" : MUTED }}>
-              <Search style={{ width: 11, height: 11 }} />
-              {matched
-                ? <span>Matched: <strong>{matched.name}</strong> · {matched.grade} · Guardian: {matched.guardianName} ({matched.guardianPhone})</span>
-                : <span>No student found for this ID</span>
-              }
-            </div>
-          )}
-
-          {/* Error */}
-          {error && (
-            <div className="mt-3 flex items-center gap-2 px-3 py-2.5 rounded-md text-[13px]" style={{ background: "#FFF1F2", border: "1px solid #FECDD3", color: "#BE123C" }}>
-              <XCircle style={{ width: 14, height: 14, flexShrink: 0 }} />
-              {error}
-            </div>
-          )}
-        </div>
-
-        {/* Hint */}
-        <div className="px-6 py-3 text-[12px]" style={{ background: "#FAFAFA", borderTop: `1px solid ${BORDER}`, color: MUTED }}>
-          Press <kbd className="px-1.5 py-0.5 rounded text-[11px] font-mono" style={{ background: "#F4F4F5", border: `1px solid ${BORDER}`, color: "#52525B" }}>Enter</kbd> to submit · Real ZK device punches are processed automatically via ADMS on port 8082
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setAutoRefresh(v => !v)}
+            className="flex items-center gap-1.5 h-9 px-4 rounded-xl text-sm font-semibold transition-all"
+            style={autoRefresh
+              ? { background: "#DCFCE7", color: "#15803D", border: "1px solid #BBF7D0" }
+              : { background: "#fff", color: MUTED, border: `1px solid ${BORDER}` }
+            }
+          >
+            <RefreshCw style={{ width: 13, height: 13, animation: autoRefresh ? "spin 3s linear infinite" : "none" }} />
+            {autoRefresh ? "Auto-refresh on" : "Auto-refresh"}
+          </button>
+          <button
+            onClick={() => refetch()}
+            className="flex items-center gap-1.5 h-9 px-4 rounded-xl text-sm font-semibold transition-colors"
+            style={{ background: "#fff", color: MUTED, border: `1px solid ${BORDER}` }}
+            onMouseEnter={e => (e.currentTarget.style.background = "#F8FAFC")}
+            onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
+          >
+            <RefreshCw style={{ width: 13, height: 13 }} />
+            Refresh
+          </button>
         </div>
       </div>
 
-      {/* Results log */}
-      {results.length > 0 && (
-        <div className="bg-white rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
-          <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${BORDER}`, background: "#FAFAFA" }}>
-            <p className="text-[13px] font-semibold" style={{ color: HEAD }}>Scan log</p>
-            <span className="text-[12px]" style={{ color: MUTED }}>{results.length} scan{results.length !== 1 ? "s" : ""} this session</span>
+      {/* ZK device setup info */}
+      <div className="flex items-start gap-3 px-5 py-3.5 rounded-2xl" style={{ background: "#FFFBEB", border: "1px solid #FDE68A" }}>
+        <Wifi style={{ width: 15, height: 15, color: "#D97706", flexShrink: 0, marginTop: 1 }} />
+        <div>
+          <p className="text-sm font-semibold" style={{ color: "#92400E" }}>ZKTeco Device Setup</p>
+          <p className="text-xs mt-0.5" style={{ color: "#B45309" }}>
+            On your ZKTeco device go to <strong>Communication → ADMS</strong>, set the server IP and port <strong>8082</strong>, and enable real-time push. Scans will automatically appear here when students board or alight.
+          </p>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-4">
+        {[
+          { label: "Today's Scans", value: todayScans.length, icon: Fingerprint, bg: "#FEF3C7", color: "#92400E" },
+          { label: "Boarded", value: boardCount, icon: LogIn, bg: "#DCFCE7", color: "#15803D" },
+          { label: "Alighted", value: alightCount, icon: LogOut, bg: "#FFF1F2", color: "#BE123C" },
+          { label: "Notifications Sent", value: smsSentCount, icon: CheckCircle2, bg: "#EEF2FF", color: "#4338CA" },
+        ].map(({ label, value, icon: Icon, bg, color }) => (
+          <div key={label} className="bg-white rounded-2xl px-5 py-5 flex items-center gap-4" style={{ border: `1px solid ${BORDER}` }}>
+            <div className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: bg }}>
+              <Icon style={{ width: 18, height: 18, color }} />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: MUTED }}>{label}</p>
+              <p className="text-2xl font-black mt-0.5" style={{ color: HEAD }}>{value}</p>
+            </div>
           </div>
-          <div>
-            {results.map((r, i) => (
-              <div
-                key={r.event.id}
-                className="px-5 py-3 flex items-center gap-3"
-                style={{ borderBottom: i < results.length - 1 ? `1px solid #F4F4F5` : "none" }}
-              >
-                <div
-                  className="h-8 w-8 rounded-full flex items-center justify-center shrink-0"
-                  style={r.event.scanType === "board"
-                    ? { background: "#EEF2FF", color: ACCENT }
-                    : { background: "#FFF1F2", color: "#BE123C" }
-                  }
-                >
-                  {r.event.scanType === "board"
-                    ? <LogIn style={{ width: 14, height: 14 }} />
-                    : <LogOut style={{ width: 14, height: 14 }} />
-                  }
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold" style={{ color: HEAD }}>{r.event.studentName}</span>
-                    <span
-                      className="text-[11px] font-medium px-1.5 py-0.5 rounded"
-                      style={r.event.scanType === "board"
-                        ? { background: "#EEF2FF", color: ACCENT }
-                        : { background: "#FFF1F2", color: "#BE123C" }
-                      }
-                    >
-                      {r.event.scanType === "board" ? "Boarded" : "Alighted"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5 text-[12px]" style={{ color: MUTED }}>
-                    {r.event.smsSent
-                      ? <span className="flex items-center gap-1" style={{ color: "#15803D" }}>
-                          <CheckCircle2 style={{ width: 11, height: 11 }} /> Notification sent to {r.event.guardianPhone}
-                        </span>
-                      : <span className="flex items-center gap-1" style={{ color: "#EF4444" }}>
-                          <XCircle style={{ width: 11, height: 11 }} /> Notification not sent
-                        </span>
-                    }
-                  </div>
-                </div>
-                <span className="text-[12px] shrink-0 flex items-center gap-1" style={{ color: MUTED }}>
-                  <Clock style={{ width: 11, height: 11 }} />
-                  {format(r.timestamp, "h:mm:ss a")}
+        ))}
+      </div>
+
+      {/* Feed */}
+      <div className="bg-white rounded-2xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
+        <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${BORDER}`, background: "#FAFBFC" }}>
+          <div className="flex items-center gap-2">
+            <Activity style={{ width: 15, height: 15, color: ACCENT }} />
+            <p className="text-sm font-bold" style={{ color: HEAD }}>Today's Scan Feed</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {lastUpdated && (
+              <span className="text-xs flex items-center gap-1" style={{ color: MUTED }}>
+                <Clock style={{ width: 11, height: 11 }} />
+                Updated {format(lastUpdated, "h:mm:ss a")}
+              </span>
+            )}
+            {autoRefresh && (
+              <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "#DCFCE7", color: "#15803D" }}>
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
                 </span>
+                Live
+              </span>
+            )}
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="divide-y" style={{ borderColor: "#F1F5F9" }}>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="px-6 py-4 flex gap-3 animate-pulse">
+                <div className="h-10 w-10 rounded-xl shrink-0" style={{ background: "#F1F5F9" }} />
+                <div className="flex-1 space-y-2 pt-1">
+                  <div className="h-3 rounded-full w-40" style={{ background: "#F1F5F9" }} />
+                  <div className="h-2.5 rounded-full w-60" style={{ background: "#F1F5F9" }} />
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : todayScans.length === 0 ? (
+          <div className="py-20 text-center">
+            <div className="h-16 w-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: "#FEF3C7" }}>
+              <Bus style={{ width: 28, height: 28, color: ACCENT }} />
+            </div>
+            <p className="text-sm font-semibold" style={{ color: HEAD }}>No scans yet today</p>
+            <p className="text-xs mt-1 font-medium" style={{ color: MUTED }}>
+              Scans from connected ZK devices will appear here automatically
+            </p>
+          </div>
+        ) : (
+          <div>
+            {todayScans.map((scan: ScanEvent, i: number) => {
+              const { bg, fg } = palette(scan.studentId);
+              return (
+                <div
+                  key={scan.id}
+                  className="px-6 py-4 flex items-center gap-4"
+                  style={{ borderBottom: i < todayScans.length - 1 ? `1px solid #F1F5F9` : "none" }}
+                >
+                  {/* Type icon */}
+                  <div
+                    className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={scan.scanType === "board"
+                      ? { background: "#DCFCE7" }
+                      : { background: "#FFF1F2" }
+                    }
+                  >
+                    {scan.scanType === "board"
+                      ? <LogIn style={{ width: 16, height: 16, color: "#15803D" }} />
+                      : <LogOut style={{ width: 16, height: 16, color: "#BE123C" }} />
+                    }
+                  </div>
 
-      {/* Quick reference */}
-      <div className="bg-white rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
-        <div className="px-5 py-3" style={{ borderBottom: `1px solid ${BORDER}`, background: "#FAFAFA" }}>
-          <p className="text-[13px] font-semibold" style={{ color: HEAD }}>Enrolled students — biometric IDs</p>
-        </div>
-        <div className="divide-y" style={{ borderColor: "#F4F4F5" }}>
-          {students.length === 0 ? (
-            <p className="px-5 py-4 text-[13px]" style={{ color: MUTED }}>No students enrolled yet</p>
-          ) : students.map(s => (
-            <button
-              key={s.id}
-              onClick={() => { setBiometricId(s.biometricId); setError(null); }}
-              className="w-full px-5 py-2.5 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
-              style={{ opacity: s.isActive ? 1 : 0.5 }}
-            >
-              <div>
-                <span className="text-[13px] font-medium" style={{ color: HEAD }}>{s.name}</span>
-                <span className="text-[12px] ml-2" style={{ color: MUTED }}>{s.grade}</span>
-              </div>
-              <code className="text-[12px] font-mono px-2 py-0.5 rounded" style={{ background: "#F4F4F5", color: "#52525B" }}>
-                {s.biometricId}
-              </code>
-            </button>
-          ))}
-        </div>
+                  {/* Student avatar */}
+                  <div className="h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style={{ background: bg, color: fg }}>
+                    {initials(scan.studentName)}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold" style={{ color: HEAD }}>{scan.studentName}</span>
+                      <span
+                        className="text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                        style={scan.scanType === "board"
+                          ? { background: "#DCFCE7", color: "#15803D" }
+                          : { background: "#FFF1F2", color: "#BE123C" }
+                        }
+                      >
+                        {scan.scanType === "board" ? "Boarded" : "Alighted"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      {scan.smsSent
+                        ? <span className="flex items-center gap-1 text-xs font-medium" style={{ color: "#15803D" }}>
+                            <CheckCircle2 style={{ width: 10, height: 10 }} /> Notification sent to {scan.guardianPhone}
+                          </span>
+                        : <span className="text-xs font-medium" style={{ color: "#94A3B8" }}>No notification sent</span>
+                      }
+                    </div>
+                  </div>
+
+                  {/* Time */}
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-bold tabular-nums" style={{ color: HEAD }}>{format(new Date(scan.scannedAt), "h:mm a")}</p>
+                    <p className="text-xs mt-0.5" style={{ color: MUTED }}>{format(new Date(scan.scannedAt), "d MMM")}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

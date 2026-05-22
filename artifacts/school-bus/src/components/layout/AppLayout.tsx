@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import {
-  LayoutDashboard, Users, Cpu, Plug, ScanLine, CalendarCheck, Bus, LogOut, ChevronRight,
+  LayoutDashboard, Users, Cpu, Plug, Activity, CalendarCheck, Bus, LogOut, ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -8,7 +8,8 @@ const nav = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Students", href: "/students", icon: Users },
   { name: "Attendance", href: "/attendance", icon: CalendarCheck },
-  { name: "Scan", href: "/scan", icon: ScanLine },
+  { name: "Buses", href: "/buses", icon: Bus },
+  { name: "Live Monitor", href: "/scan", icon: Activity },
   { name: "Devices", href: "/devices", icon: Cpu },
   { name: "Integration", href: "/sms", icon: Plug },
 ];
@@ -40,7 +41,7 @@ export function AppLayout({ children, onLogout }: { children: React.ReactNode; o
         </div>
 
         {/* School bus image strip */}
-        <div className="mx-4 mt-4 rounded-xl overflow-hidden" style={{ height: 90 }}>
+        <div className="mx-4 mt-4 rounded-xl overflow-hidden" style={{ height: 80 }}>
           <img
             src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=400&q=80"
             alt="School bus"
@@ -50,12 +51,12 @@ export function AppLayout({ children, onLogout }: { children: React.ReactNode; o
         </div>
 
         {/* Nav label */}
-        <p className="px-5 mt-5 mb-2 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#3E6A94" }}>
+        <p className="px-5 mt-4 mb-1.5 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#3E6A94" }}>
           Main Menu
         </p>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 space-y-0.5">
+        <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
           {nav.map((item) => {
             const active = location === item.href;
             return (
@@ -66,11 +67,7 @@ export function AppLayout({ children, onLogout }: { children: React.ReactNode; o
                   )}
                   style={
                     active
-                      ? {
-                          background: "#F59E0B",
-                          color: "#fff",
-                          boxShadow: "0 2px 8px rgba(245,158,11,0.3)",
-                        }
+                      ? { background: "#F59E0B", color: "#fff", boxShadow: "0 2px 8px rgba(245,158,11,0.3)" }
                       : { color: "#7BADD4" }
                   }
                   onMouseEnter={e => {
@@ -97,40 +94,21 @@ export function AppLayout({ children, onLogout }: { children: React.ReactNode; o
 
         {/* Bottom section */}
         <div className="px-3 pb-4 space-y-3" style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 12 }}>
-          {/* User */}
-          <div
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
-            style={{ background: "rgba(255,255,255,0.05)" }}
-          >
-            <div
-              className="h-8 w-8 rounded-full flex items-center justify-center text-[12px] font-bold shrink-0 overflow-hidden"
-              style={{ background: "#F59E0B", color: "#fff" }}
-            >
-              <img
-                src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=80&h=80&q=80"
-                alt="Admin"
-                className="w-full h-full object-cover"
-              />
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.05)" }}>
+            <div className="h-8 w-8 rounded-full flex items-center justify-center text-[12px] font-bold shrink-0 overflow-hidden" style={{ background: "#F59E0B", color: "#fff" }}>
+              <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=80&h=80&q=80" alt="Admin" className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[12px] font-semibold leading-tight text-white truncate">Admin User</p>
               <p className="text-[11px] leading-tight truncate" style={{ color: "#5B8AB5" }}>Administrator</p>
             </div>
           </div>
-
-          {/* Logout */}
           <button
             onClick={onLogout}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] font-medium transition-all duration-100 cursor-pointer"
             style={{ color: "#7BADD4", background: "transparent", border: "none" }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.12)";
-              (e.currentTarget as HTMLElement).style.color = "#FCA5A5";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.background = "transparent";
-              (e.currentTarget as HTMLElement).style.color = "#7BADD4";
-            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.12)"; (e.currentTarget as HTMLElement).style.color = "#FCA5A5"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#7BADD4"; }}
           >
             <LogOut style={{ width: 14, height: 14 }} />
             <span>Sign out</span>
@@ -139,12 +117,9 @@ export function AppLayout({ children, onLogout }: { children: React.ReactNode; o
       </aside>
 
       {/* Main */}
-      <div className="flex-1 ml-60">
+      <div className="flex-1 ml-60 flex flex-col min-h-screen">
         {/* Top bar */}
-        <div
-          className="sticky top-0 z-10 flex items-center px-8 py-3"
-          style={{ background: "#fff", borderBottom: "1px solid #E2E8F0" }}
-        >
+        <div className="sticky top-0 z-10 flex items-center px-8 py-3" style={{ background: "#fff", borderBottom: "1px solid #E2E8F0" }}>
           <div className="flex items-center gap-2 text-xs" style={{ color: "#64748B" }}>
             <Bus style={{ width: 13, height: 13 }} />
             <span>SafeRide Ops</span>
@@ -162,7 +137,7 @@ export function AppLayout({ children, onLogout }: { children: React.ReactNode; o
             Live
           </div>
         </div>
-        <main className="px-8 py-7 max-w-6xl">{children}</main>
+        <main className="flex-1 px-8 py-7">{children}</main>
       </div>
     </div>
   );
