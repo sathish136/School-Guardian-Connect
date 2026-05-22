@@ -5,7 +5,7 @@ import { z } from "zod/v4";
 export const scansTable = pgTable("scans", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").notNull(),
-  tripId: integer("trip_id").notNull(),
+  tripId: integer("trip_id"),
   scanType: text("scan_type").notNull(),
   scannedAt: timestamp("scanned_at", { withTimezone: true }).notNull().defaultNow(),
   location: text("location"),
