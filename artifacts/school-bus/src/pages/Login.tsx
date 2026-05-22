@@ -214,6 +214,20 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
               <code className="font-mono">admin123</code>
             </p>
           </div>
+
+          {/* Powered by */}
+          <div className="mt-8 flex items-center justify-center gap-2">
+            <span className="text-[11px] font-medium" style={{ color: "#94A3B8" }}>Powered by</span>
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCzrc0k5wmNzmItazY38yj1_7K5zAFLMxn-Q&s"
+              alt="Live U"
+              className="h-5 w-5 rounded object-contain"
+              style={{ opacity: 0.85 }}
+            />
+            <span className="text-[11px] font-semibold" style={{ color: "#64748B" }}>
+              Live U Pvt Ltd, Sri Lanka
+            </span>
+          </div>
         </div>
       </div>
     </div>
