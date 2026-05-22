@@ -9,6 +9,7 @@ import Students from "@/pages/Students";
 import Devices from "@/pages/Devices";
 import SmsPage from "@/pages/Sms";
 import ScanPage from "@/pages/Scan";
+import AttendancePage from "@/pages/Attendance";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/students" component={Students} />
+        <Route path="/attendance" component={AttendancePage} />
         <Route path="/devices" component={Devices} />
         <Route path="/sms" component={SmsPage} />
         <Route path="/scan" component={ScanPage} />
