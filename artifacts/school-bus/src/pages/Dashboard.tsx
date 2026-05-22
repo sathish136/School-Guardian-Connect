@@ -1,144 +1,178 @@
 import { useGetDashboardStats, useGetRecentActivity } from "@workspace/api-client-react";
-import { Users, Bus, Map, Activity, AlertTriangle, ShieldCheck, CheckCircle2, Radio } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format } from "date-fns";
+import {
+  Users, Fingerprint, MessageSquare, ArrowUpRight,
+  LogIn, LogOut, CheckCircle2, Clock, AlertCircle
+} from "lucide-react";
+import { format, isToday } from "date-fns";
+
+function StatCard({
+  label, value, icon: Icon, color, sub
+}: {
+  label: string;
+  value: number | string;
+  icon: React.ElementType;
+  color: string;
+  sub?: string;
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-slate-500">{label}</span>
+        <div className={`p-2 rounded-xl ${color}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+      </div>
+      <div>
+        <p className="text-3xl font-bold text-slate-900 tracking-tight">{value}</p>
+        {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
-  const { data: stats, isLoading: statsLoading } = useGetDashboardStats();
-  const { data: activity, isLoading: activityLoading } = useGetRecentActivity({ limit: 10 });
+  const { data: stats } = useGetDashboardStats();
+  const { data: activity, isLoading: activityLoading } = useGetRecentActivity({ limit: 15 });
+
+  const now = new Date();
+  const greeting =
+    now.getHours() < 12 ? "Good morning" :
+    now.getHours() < 17 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-7 max-w-5xl">
+      {/* Header */}
+      <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight" data-testid="page-title">Operations Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">Live monitoring and fleet status</p>
+          <p className="text-sm text-slate-400 font-medium">{greeting}, Admin</p>
+          <h1 className="text-2xl font-bold text-slate-900 mt-0.5">Dashboard</h1>
         </div>
-        <div className="flex items-center space-x-2 text-sm">
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+        <div className="flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-full font-medium">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
           </span>
-          <span className="text-slate-600 font-medium">System Online</span>
+          Live
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Students On Buses</p>
-                <div className="flex items-baseline mt-1">
-                  <p className="text-3xl font-bold text-slate-900" data-testid="stat-students-on-bus">{stats?.studentsOnBus ?? 0}</p>
-                </div>
-              </div>
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-amber-500">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Active Trips</p>
-                <div className="flex items-baseline mt-1">
-                  <p className="text-3xl font-bold text-slate-900" data-testid="stat-active-trips">{stats?.activeTrips ?? 0}</p>
-                </div>
-              </div>
-              <div className="p-3 bg-amber-50 rounded-lg">
-                <Activity className="h-6 w-6 text-amber-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-emerald-500">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Today's Scans</p>
-                <div className="flex items-baseline mt-1">
-                  <p className="text-3xl font-bold text-slate-900" data-testid="stat-today-scans">{stats?.todayScans ?? 0}</p>
-                </div>
-              </div>
-              <div className="p-3 bg-emerald-50 rounded-lg">
-                <ShieldCheck className="h-6 w-6 text-emerald-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-purple-500">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">SMS Delivered</p>
-                <div className="flex items-baseline mt-1">
-                  <p className="text-3xl font-bold text-slate-900" data-testid="stat-sms-sent">{stats?.smsSentToday ?? 0}</p>
-                  {stats?.smsFailedToday ? (
-                    <span className="ml-2 text-sm text-red-600 flex items-center">
-                      <AlertTriangle className="h-3 w-3 mr-1" /> {stats.smsFailedToday} failed
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <CheckCircle2 className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          label="Students Enrolled"
+          value={stats?.totalStudents ?? 0}
+          icon={Users}
+          color="bg-indigo-50 text-indigo-600"
+          sub="total registered"
+        />
+        <StatCard
+          label="Today's Punches"
+          value={stats?.todayScans ?? 0}
+          icon={Fingerprint}
+          color="bg-violet-50 text-violet-600"
+          sub={`${stats?.todayBoardings ?? 0} in · ${stats?.todayAlightings ?? 0} out`}
+        />
+        <StatCard
+          label="SMS Sent Today"
+          value={stats?.smsSentToday ?? 0}
+          icon={MessageSquare}
+          color="bg-emerald-50 text-emerald-600"
+          sub={stats?.smsFailedToday ? `${stats.smsFailedToday} failed` : "all delivered"}
+        />
+        <StatCard
+          label="Currently on Bus"
+          value={stats?.studentsOnBus ?? 0}
+          icon={ArrowUpRight}
+          color="bg-amber-50 text-amber-600"
+          sub="active right now"
+        />
       </div>
 
-      {/* Activity Feed */}
-      <Card className="shadow-sm">
-        <CardHeader className="border-b bg-slate-50">
-          <CardTitle className="text-lg font-semibold text-slate-800 flex items-center">
-            <Radio className="h-5 w-5 mr-2 text-slate-500" />
-            Live Activity Feed
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {activityLoading ? (
-            <div className="p-8 text-center text-slate-500" data-testid="activity-loading">Loading recent activity...</div>
-          ) : activity && activity.length > 0 ? (
-            <div className="divide-y divide-slate-100">
-              {activity.map((item) => (
-                <div key={item.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center" data-testid={`activity-item-${item.id}`}>
-                  <div className={`p-2 rounded-full mr-4 ${item.scanType === 'board' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
-                    {item.scanType === 'board' ? <ShieldCheck className="h-5 w-5" /> : <Map className="h-5 w-5" />}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-900">
-                      {item.studentName} <span className="font-normal text-slate-500">scanned to</span> <span className="font-semibold text-slate-700">{item.scanType === 'board' ? 'board' : 'alight'}</span>
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1 flex items-center">
-                      <Bus className="h-3 w-3 mr-1" /> Bus {item.busNumber}
-                      <span className="mx-2">•</span>
-                      {format(new Date(item.scannedAt), "h:mm:ss a")}
-                    </p>
-                  </div>
-                  {item.smsSent && (
-                    <div className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200 flex items-center">
-                      <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-500" /> SMS Sent
-                    </div>
-                  )}
+      {/* Activity */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-800">Recent Activity</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Biometric punch log</p>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-slate-400">
+            <Clock className="h-3.5 w-3.5" />
+            {format(now, "MMM d, h:mm a")}
+          </div>
+        </div>
+
+        {activityLoading ? (
+          <div className="divide-y divide-slate-50">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="px-5 py-3.5 flex items-center gap-3 animate-pulse">
+                <div className="h-8 w-8 rounded-full bg-slate-100 shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 bg-slate-100 rounded w-48" />
+                  <div className="h-2.5 bg-slate-100 rounded w-32" />
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+        ) : activity && activity.length > 0 ? (
+          <div className="divide-y divide-slate-50">
+            {activity.map((item) => {
+              const isBoard = item.scanType === "board";
+              const scannedAt = new Date(item.scannedAt);
+              const timeLabel = isToday(scannedAt)
+                ? format(scannedAt, "h:mm a")
+                : format(scannedAt, "MMM d, h:mm a");
+
+              return (
+                <div key={item.id} className="px-5 py-3.5 flex items-center gap-4 hover:bg-slate-50 transition-colors">
+                  {/* Avatar */}
+                  <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
+                    isBoard ? "bg-indigo-100 text-indigo-700" : "bg-rose-100 text-rose-700"
+                  }`}>
+                    {item.studentName?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() ?? "?"}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-slate-800 truncate">{item.studentName}</span>
+                      <span className={`inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                        isBoard
+                          ? "bg-indigo-50 text-indigo-600"
+                          : "bg-rose-50 text-rose-600"
+                      }`}>
+                        {isBoard ? <LogIn className="h-2.5 w-2.5" /> : <LogOut className="h-2.5 w-2.5" />}
+                        {isBoard ? "Boarded" : "Alighted"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {item.busNumber ? `Bus ${item.busNumber}` : "Unknown bus"}
+                      {item.grade ? ` · ${item.grade}` : ""}
+                    </p>
+                  </div>
+
+                  {/* Right */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {item.smsSent && (
+                      <span className="flex items-center gap-0.5 text-[10px] text-emerald-600 font-medium">
+                        <CheckCircle2 className="h-3 w-3" /> SMS
+                      </span>
+                    )}
+                    <span className="text-xs text-slate-400">{timeLabel}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="py-20 text-center">
+            <div className="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
+              <AlertCircle className="h-5 w-5 text-slate-300" />
             </div>
-          ) : (
-            <div className="p-12 text-center text-slate-500">
-              <ShieldCheck className="h-12 w-12 mx-auto text-slate-300 mb-3" />
-              <p>No activity recorded today</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            <p className="text-sm font-medium text-slate-500">No activity yet today</p>
+            <p className="text-xs text-slate-400 mt-1">Biometric punches will appear here in real time</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

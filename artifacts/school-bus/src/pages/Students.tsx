@@ -6,7 +6,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Plus, Search, Pencil, Trash2, UserCheck, UserX, Fingerprint,
-  Phone, User, BookOpen, GraduationCap, Bus
+  Phone, User, GraduationCap, LayoutGrid, List, BookOpen
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,27 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { Student, StudentInput } from "@workspace/api-client-react";
+import { cn } from "@/lib/utils";
 
+const AVATAR_COLORS = [
+  ["bg-indigo-100", "text-indigo-700"],
+  ["bg-violet-100", "text-violet-700"],
+  ["bg-blue-100", "text-blue-700"],
+  ["bg-emerald-100", "text-emerald-700"],
+  ["bg-amber-100", "text-amber-700"],
+  ["bg-rose-100", "text-rose-700"],
+  ["bg-cyan-100", "text-cyan-700"],
+];
+
+function getInitials(name: string) {
+  return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function getColor(id: number) {
+  return AVATAR_COLORS[id % AVATAR_COLORS.length];
+}
+
+/* ─── Form ─────────────────────────────────────────────────────────────────── */
 function StudentForm({
   initial, onSubmit, onClose, isPending
 }: {
@@ -48,15 +68,15 @@ function StudentForm({
     extra?: Partial<React.InputHTMLAttributes<HTMLInputElement>>
   ) => (
     <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+      <Label htmlFor={id} className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
         {label}
       </Label>
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">{icon}</span>
         <Input
           id={id}
-          className="pl-9 h-10"
-          value={form[id] as string ?? ""}
+          className="pl-9 h-10 text-sm"
+          value={(form[id] as string) ?? ""}
           onChange={e => setForm(p => ({ ...p, [id]: e.target.value }))}
           {...extra}
         />
@@ -72,51 +92,28 @@ function StudentForm({
       </div>
 
       <div className="border-t pt-4">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Guardian Information</p>
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Guardian</p>
         <div className="grid grid-cols-2 gap-4">
           {field("guardianName", "Guardian Name", <User className="h-4 w-4" />, { placeholder: "e.g. Jane Doe", required: true })}
-          {field("guardianPhone", "Guardian Phone", <Phone className="h-4 w-4" />, { placeholder: "+1 555 000 0000", required: true })}
+          {field("guardianPhone", "Phone Number", <Phone className="h-4 w-4" />, { placeholder: "+1 555 000 0000", required: true })}
         </div>
       </div>
 
       <div className="border-t pt-4">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Biometric & Transport</p>
-        <div className="grid grid-cols-2 gap-4">
-          {field("biometricId", "Biometric ID", <Fingerprint className="h-4 w-4" />, { placeholder: "Device enrollment ID", required: true, className: "pl-9 h-10 font-mono" })}
-          <div className="space-y-1.5">
-            <Label htmlFor="busId" className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-              Bus Number (optional)
-            </Label>
-            <div className="relative">
-              <Bus className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <Input
-                id="busId"
-                className="pl-9 h-10"
-                placeholder="e.g. BUS-01"
-                value={form.busId ?? ""}
-                onChange={e => setForm(p => ({ ...p, busId: e.target.value ? Number(e.target.value) : null }))}
-                type="number"
-                min={1}
-              />
-            </div>
-          </div>
-        </div>
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Biometric</p>
+        {field("biometricId", "Biometric ID", <Fingerprint className="h-4 w-4" />, { placeholder: "Device enrollment ID", required: true, className: "pl-9 h-10 font-mono text-sm" })}
       </div>
 
       <div className="flex items-center justify-between border-t pt-4">
-        <div className="flex items-center gap-3">
-          <Switch
-            id="isActive"
-            checked={form.isActive ?? true}
-            onCheckedChange={v => setForm(p => ({ ...p, isActive: v }))}
-          />
-          <Label htmlFor="isActive" className="text-sm text-slate-700">
-            {form.isActive ? "Active — will receive SMS notifications" : "Inactive — SMS notifications paused"}
+        <div className="flex items-center gap-2.5">
+          <Switch id="isActive" checked={form.isActive ?? true} onCheckedChange={v => setForm(p => ({ ...p, isActive: v }))} />
+          <Label htmlFor="isActive" className="text-sm text-slate-600">
+            {form.isActive ? "Active" : "Inactive"}
           </Label>
         </div>
-        <div className="flex gap-3">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={isPending} className="bg-slate-900 hover:bg-slate-800">
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={onClose}>Cancel</Button>
+          <Button type="submit" size="sm" disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700">
             {isPending ? "Saving..." : initial ? "Save Changes" : "Add Student"}
           </Button>
         </div>
@@ -125,106 +122,65 @@ function StudentForm({
   );
 }
 
-function StudentCard({
-  student, onEdit, onDelete, isDeleting
-}: {
-  student: Student;
-  onEdit: () => void;
-  onDelete: (id: number) => void;
-  isDeleting: boolean;
+/* ─── Card view ─────────────────────────────────────────────────────────────── */
+function StudentCard({ student, onEdit, onDelete, isDeleting }: {
+  student: Student; onEdit: () => void; onDelete: (id: number) => void; isDeleting: boolean;
 }) {
-  const initials = student.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
-  const colors = [
-    "bg-violet-100 text-violet-700",
-    "bg-blue-100 text-blue-700",
-    "bg-amber-100 text-amber-700",
-    "bg-emerald-100 text-emerald-700",
-    "bg-rose-100 text-rose-700",
-    "bg-cyan-100 text-cyan-700",
-  ];
-  const color = colors[student.id % colors.length];
+  const [bg, fg] = getColor(student.id);
 
   return (
-    <Card className={`group hover:shadow-md transition-all duration-200 border ${student.isActive ? "border-slate-200" : "border-slate-100 opacity-70"}`}>
+    <Card className={cn(
+      "border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 rounded-2xl",
+      !student.isActive && "opacity-60"
+    )}>
       <CardContent className="p-5">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className={`h-10 w-10 rounded-full ${color} flex items-center justify-center font-bold text-sm shrink-0`}>
-              {initials}
-            </div>
-            <div>
-              <p className="font-semibold text-slate-900 text-sm leading-tight">{student.name}</p>
-              <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                <GraduationCap className="h-3 w-3" />
-                {student.grade}
-              </p>
-            </div>
+        <div className="flex items-start gap-3 mb-4">
+          <div className={`h-10 w-10 rounded-full ${bg} ${fg} flex items-center justify-center font-bold text-sm shrink-0`}>
+            {getInitials(student.name)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-slate-900 text-sm truncate">{student.name}</p>
+            <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+              <GraduationCap className="h-3 w-3" />{student.grade}
+            </p>
           </div>
           {student.isActive
-            ? <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs shrink-0"><UserCheck className="h-3 w-3 mr-1" />Active</Badge>
-            : <Badge variant="outline" className="text-slate-400 text-xs shrink-0"><UserX className="h-3 w-3 mr-1" />Inactive</Badge>
+            ? <Badge className="bg-emerald-50 text-emerald-700 border-0 text-[10px] px-1.5 shrink-0"><UserCheck className="h-2.5 w-2.5 mr-0.5" />Active</Badge>
+            : <Badge variant="outline" className="text-slate-400 text-[10px] px-1.5 shrink-0"><UserX className="h-2.5 w-2.5 mr-0.5" />Inactive</Badge>
           }
         </div>
 
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-xs text-slate-600">
-            <User className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-            <span>{student.guardianName}</span>
+        <div className="space-y-1.5 mb-4">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <User className="h-3 w-3 text-slate-300 shrink-0" />{student.guardianName}
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-600">
-            <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-            <span className="font-medium">{student.guardianPhone}</span>
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <Phone className="h-3 w-3 text-slate-300 shrink-0" />{student.guardianPhone}
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <Fingerprint className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-            <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-700 tracking-wider">
-              {student.biometricId}
-            </span>
+            <Fingerprint className="h-3 w-3 text-indigo-400 shrink-0" />
+            <code className="font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] tracking-wider">{student.biometricId}</code>
           </div>
-          {student.busId && (
-            <div className="flex items-center gap-2 text-xs text-slate-600">
-              <Bus className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-              <span>Bus #{student.busId}</span>
-            </div>
-          )}
         </div>
 
-        <div className="flex gap-2 border-t pt-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onEdit}
-            className="flex-1 h-8 text-xs"
-          >
-            <Pencil className="h-3 w-3 mr-1.5" />
-            Edit
+        <div className="flex gap-2 pt-3 border-t border-slate-100">
+          <Button variant="outline" size="sm" onClick={onEdit} className="flex-1 h-7 text-xs rounded-lg">
+            <Pencil className="h-3 w-3 mr-1" />Edit
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-2.5 text-red-500 hover:text-red-700 hover:border-red-300 hover:bg-red-50"
-                disabled={isDeleting}
-              >
+              <Button variant="outline" size="sm" disabled={isDeleting} className="h-7 px-2 text-red-400 hover:text-red-600 hover:border-red-200 rounded-lg">
                 <Trash2 className="h-3 w-3" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Remove {student.name}?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete this student and all associated scan records. This action cannot be undone.
-                </AlertDialogDescription>
+                <AlertDialogDescription>This will permanently delete this student. This action cannot be undone.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => onDelete(student.id)}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  Delete
-                </AlertDialogAction>
+                <AlertDialogAction onClick={() => onDelete(student.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -234,9 +190,71 @@ function StudentCard({
   );
 }
 
+/* ─── List row ──────────────────────────────────────────────────────────────── */
+function StudentRow({ student, onEdit, onDelete, isDeleting }: {
+  student: Student; onEdit: () => void; onDelete: (id: number) => void; isDeleting: boolean;
+}) {
+  const [bg, fg] = getColor(student.id);
+
+  return (
+    <tr className={cn("hover:bg-slate-50 transition-colors border-b border-slate-100", !student.isActive && "opacity-60")}>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className={`h-8 w-8 rounded-full ${bg} ${fg} flex items-center justify-center font-bold text-xs shrink-0`}>
+            {getInitials(student.name)}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-800">{student.name}</p>
+            <p className="text-xs text-slate-400 flex items-center gap-1"><GraduationCap className="h-2.5 w-2.5" />{student.grade}</p>
+          </div>
+        </div>
+      </td>
+      <td className="px-4 py-3">
+        <p className="text-sm text-slate-700">{student.guardianName}</p>
+        <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5"><Phone className="h-2.5 w-2.5" />{student.guardianPhone}</p>
+      </td>
+      <td className="px-4 py-3">
+        <code className="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-md tracking-wider">{student.biometricId}</code>
+      </td>
+      <td className="px-4 py-3">
+        {student.isActive
+          ? <Badge className="bg-emerald-50 text-emerald-700 border-0 text-xs"><UserCheck className="h-2.5 w-2.5 mr-1" />Active</Badge>
+          : <Badge variant="outline" className="text-slate-400 text-xs"><UserX className="h-2.5 w-2.5 mr-1" />Inactive</Badge>
+        }
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-1 justify-end">
+          <Button variant="ghost" size="sm" onClick={onEdit} className="h-7 px-2 text-slate-500 hover:text-slate-700">
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="sm" disabled={isDeleting} className="h-7 px-2 text-red-400 hover:text-red-600">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remove {student.name}?</AlertDialogTitle>
+                <AlertDialogDescription>This will permanently delete this student. This action cannot be undone.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(student.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+/* ─── Page ──────────────────────────────────────────────────────────────────── */
 export default function Students() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [view, setView] = useState<"grid" | "list">("list");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
 
@@ -248,16 +266,12 @@ export default function Students() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: getListStudentsQueryKey() });
 
   const handleCreate = (data: StudentInput) => {
-    create.mutate({ data }, {
-      onSuccess: () => { invalidate(); setDialogOpen(false); }
-    });
+    create.mutate({ data }, { onSuccess: () => { invalidate(); setDialogOpen(false); } });
   };
 
   const handleUpdate = (data: StudentInput) => {
     if (!editStudent) return;
-    update.mutate({ id: editStudent.id, data }, {
-      onSuccess: () => { invalidate(); setEditStudent(null); }
-    });
+    update.mutate({ id: editStudent.id, data }, { onSuccess: () => { invalidate(); setEditStudent(null); } });
   };
 
   const handleDelete = (id: number) => {
@@ -268,85 +282,122 @@ export default function Students() {
   const inactive = students.filter(s => !s.isActive);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 max-w-6xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Students</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900">Students</h1>
+          <p className="text-sm text-slate-400 mt-0.5">
             {students.length > 0
-              ? `${active.length} active · ${inactive.length} inactive · ${students.length} total`
-              : "Manage enrolled students and guardian contacts"}
+              ? `${active.length} active · ${inactive.length} inactive`
+              : "Manage enrolled students"}
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-slate-900 hover:bg-slate-800">
-              <Plus className="h-4 w-4 mr-2" /> Add Student
+            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 rounded-xl gap-1.5">
+              <Plus className="h-4 w-4" /> Add Student
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-lg">Add New Student</DialogTitle>
-            </DialogHeader>
+          <DialogContent className="max-w-xl">
+            <DialogHeader><DialogTitle>New Student</DialogTitle></DialogHeader>
             <StudentForm onSubmit={handleCreate} onClose={() => setDialogOpen(false)} isPending={create.isPending} />
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-        <Input
-          className="pl-9 h-10"
-          placeholder="Search by name, grade, or guardian..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+      {/* Toolbar */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+          <Input className="pl-9 h-9 text-sm rounded-xl border-slate-200" placeholder="Search students..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+          <Button
+            variant="ghost" size="sm"
+            className={cn("h-7 w-7 p-0 rounded-lg", view === "list" && "bg-white shadow-sm")}
+            onClick={() => setView("list")}
+          >
+            <List className="h-3.5 w-3.5 text-slate-600" />
+          </Button>
+          <Button
+            variant="ghost" size="sm"
+            className={cn("h-7 w-7 p-0 rounded-lg", view === "grid" && "bg-white shadow-sm")}
+            onClick={() => setView("grid")}
+          >
+            <LayoutGrid className="h-3.5 w-3.5 text-slate-600" />
+          </Button>
+        </div>
       </div>
 
       {/* Content */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-5 h-44 bg-slate-50" />
-            </Card>
-          ))}
-        </div>
+        view === "list" ? (
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="px-4 py-3 flex items-center gap-3 border-b border-slate-50 animate-pulse">
+                <div className="h-8 w-8 rounded-full bg-slate-100" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 bg-slate-100 rounded w-40" />
+                  <div className="h-2 bg-slate-100 rounded w-24" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <Card key={i} className="animate-pulse rounded-2xl"><CardContent className="p-5 h-44 bg-slate-50" /></Card>
+            ))}
+          </div>
+        )
       ) : students.length === 0 ? (
-        <Card>
-          <CardContent className="py-20 text-center">
-            <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-              <BookOpen className="h-7 w-7 text-slate-400" />
-            </div>
-            <p className="font-semibold text-slate-700">No students yet</p>
-            <p className="text-sm text-slate-400 mt-1 mb-5">Add your first student to get started with biometric tracking</p>
-            <Button onClick={() => setDialogOpen(true)} className="bg-slate-900 hover:bg-slate-800">
-              <Plus className="h-4 w-4 mr-2" /> Add First Student
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm py-20 text-center">
+          <div className="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+            <BookOpen className="h-6 w-6 text-slate-400" />
+          </div>
+          <p className="font-semibold text-slate-700">No students yet</p>
+          <p className="text-sm text-slate-400 mt-1 mb-5">Add your first student to start tracking</p>
+          <Button size="sm" onClick={() => setDialogOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 rounded-xl">
+            <Plus className="h-4 w-4 mr-1.5" /> Add First Student
+          </Button>
+        </div>
+      ) : view === "list" ? (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50">
+                <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Student</th>
+                <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Guardian</th>
+                <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Biometric ID</th>
+                <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+                <th className="px-4 py-2.5" />
+              </tr>
+            </thead>
+            <tbody>
+              {students.map(s => (
+                <Dialog key={s.id} open={editStudent?.id === s.id} onOpenChange={open => setEditStudent(open ? s : null)}>
+                  <StudentRow student={s} onEdit={() => setEditStudent(s)} onDelete={handleDelete} isDeleting={remove.isPending} />
+                  <DialogContent className="max-w-xl">
+                    <DialogHeader><DialogTitle>Edit Student</DialogTitle></DialogHeader>
+                    <StudentForm initial={s} onSubmit={handleUpdate} onClose={() => setEditStudent(null)} isPending={update.isPending} />
+                  </DialogContent>
+                </Dialog>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {active.length > 0 && (
             <div>
-              {inactive.length > 0 && (
-                <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                  Active ({active.length})
-                </h2>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {inactive.length > 0 && <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Active ({active.length})</p>}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {active.map(s => (
                   <Dialog key={s.id} open={editStudent?.id === s.id} onOpenChange={open => setEditStudent(open ? s : null)}>
-                    <StudentCard
-                      student={s}
-                      onEdit={() => setEditStudent(s)}
-                      onDelete={handleDelete}
-                      isDeleting={remove.isPending}
-                    />
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader><DialogTitle className="text-lg">Edit Student</DialogTitle></DialogHeader>
+                    <StudentCard student={s} onEdit={() => setEditStudent(s)} onDelete={handleDelete} isDeleting={remove.isPending} />
+                    <DialogContent className="max-w-xl">
+                      <DialogHeader><DialogTitle>Edit Student</DialogTitle></DialogHeader>
                       <StudentForm initial={s} onSubmit={handleUpdate} onClose={() => setEditStudent(null)} isPending={update.isPending} />
                     </DialogContent>
                   </Dialog>
@@ -356,20 +407,13 @@ export default function Students() {
           )}
           {inactive.length > 0 && (
             <div>
-              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                Inactive ({inactive.length})
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Inactive ({inactive.length})</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {inactive.map(s => (
                   <Dialog key={s.id} open={editStudent?.id === s.id} onOpenChange={open => setEditStudent(open ? s : null)}>
-                    <StudentCard
-                      student={s}
-                      onEdit={() => setEditStudent(s)}
-                      onDelete={handleDelete}
-                      isDeleting={remove.isPending}
-                    />
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader><DialogTitle className="text-lg">Edit Student</DialogTitle></DialogHeader>
+                    <StudentCard student={s} onEdit={() => setEditStudent(s)} onDelete={handleDelete} isDeleting={remove.isPending} />
+                    <DialogContent className="max-w-xl">
+                      <DialogHeader><DialogTitle>Edit Student</DialogTitle></DialogHeader>
                       <StudentForm initial={s} onSubmit={handleUpdate} onClose={() => setEditStudent(null)} isPending={update.isPending} />
                     </DialogContent>
                   </Dialog>

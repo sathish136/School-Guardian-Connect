@@ -1,66 +1,79 @@
 import { Link, useLocation } from "wouter";
-import { Shield, Users, Settings, ShieldCheck, Cpu } from "lucide-react";
+import { LayoutDashboard, Users, Cpu, MessageSquare, Fingerprint } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: ShieldCheck },
+  { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Students", href: "/students", icon: Users },
   { name: "Devices", href: "/devices", icon: Cpu },
-  { name: "SMS Config", href: "/sms", icon: Settings },
+  { name: "SMS Config", href: "/sms", icon: MessageSquare },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen flex bg-slate-50">
       {/* Sidebar */}
-      <div className="w-64 bg-slate-900 text-white flex flex-col fixed inset-y-0 z-10">
-        <div className="h-16 flex items-center px-6 bg-slate-950 border-b border-slate-800">
-          <Shield className="h-6 w-6 text-amber-500 mr-3" />
-          <span className="font-bold text-lg tracking-tight">SafeRide Ops</span>
+      <aside className="w-60 bg-white border-r border-slate-100 flex flex-col fixed inset-y-0 z-10 shadow-sm">
+        {/* Logo */}
+        <div className="h-14 flex items-center px-5 border-b border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-indigo-600 flex items-center justify-center">
+              <Fingerprint className="h-4 w-4 text-white" />
+            </div>
+            <span className="font-bold text-slate-800 text-base tracking-tight">ZKBus</span>
+          </div>
         </div>
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5">
+          <p className="px-2 pb-2 text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Menu</p>
           {navigation.map((item) => {
             const isActive = location === item.href;
             return (
               <Link key={item.name} href={item.href}>
                 <div
                   className={cn(
-                    "flex items-center px-3 py-2.5 text-sm font-medium rounded-md cursor-pointer transition-colors group",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-all",
                     isActive
-                      ? "bg-slate-800 text-white"
-                      : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                      ? "bg-indigo-50 text-indigo-700"
+                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                   )}
                 >
                   <item.icon
                     className={cn(
-                      "flex-shrink-0 -ml-1 mr-3 h-5 w-5",
-                      isActive ? "text-amber-500" : "text-slate-400 group-hover:text-amber-500"
+                      "h-4 w-4 shrink-0",
+                      isActive ? "text-indigo-600" : "text-slate-400"
                     )}
                   />
-                  <span className="truncate">{item.name}</span>
+                  <span>{item.name}</span>
+                  {isActive && (
+                    <div className="ml-auto h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                  )}
                 </div>
               </Link>
             );
           })}
         </nav>
-        <div className="p-4 bg-slate-950 border-t border-slate-800">
-          <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center text-amber-500 font-bold text-sm">
+
+        {/* Footer */}
+        <div className="px-4 py-4 border-t border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs shrink-0">
               AD
             </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-white">Admin User</p>
-              <p className="text-xs font-medium text-slate-400">Control Center</p>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-slate-700 truncate">Admin</p>
+              <p className="text-[10px] text-slate-400 truncate">Administrator</p>
             </div>
           </div>
         </div>
-      </div>
+      </aside>
 
-      {/* Main content */}
-      <div className="flex-1 ml-64 flex flex-col min-w-0">
-        <main className="flex-1 py-8 px-8">{children}</main>
+      {/* Content */}
+      <div className="flex-1 ml-60 min-w-0">
+        <main className="min-h-screen py-7 px-8">{children}</main>
       </div>
     </div>
   );
