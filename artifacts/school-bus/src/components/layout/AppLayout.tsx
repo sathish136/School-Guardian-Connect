@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import {
-  LayoutDashboard, Users, Cpu, Plug, Activity, CalendarCheck, Bus, LogOut, ChevronRight,
+  LayoutDashboard, Users, Cpu, Plug, Activity, CalendarCheck, Bus, LogOut, ChevronRight, MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +9,7 @@ const nav = [
   { name: "Students", href: "/students", icon: Users },
   { name: "Attendance", href: "/attendance", icon: CalendarCheck },
   { name: "Buses", href: "/buses", icon: Bus },
+  { name: "GPS Tracker", href: "/gps", icon: MapPin },
   { name: "Live Monitor", href: "/scan", icon: Activity },
   { name: "Devices", href: "/devices", icon: Cpu },
   { name: "Integration", href: "/sms", icon: Plug },

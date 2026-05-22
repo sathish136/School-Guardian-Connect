@@ -12,6 +12,7 @@ import SmsPage from "@/pages/Sms";
 import ScanPage from "@/pages/Scan";
 import AttendancePage from "@/pages/Attendance";
 import BusesPage from "@/pages/Buses";
+import GpsMap from "@/pages/GpsMap";
 import Login from "@/pages/Login";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ function Router({ onLogout }: { onLogout: () => void }) {
         <Route path="/students" component={Students} />
         <Route path="/attendance" component={AttendancePage} />
         <Route path="/buses" component={BusesPage} />
+        <Route path="/gps" component={GpsMap} />
         <Route path="/devices" component={Devices} />
         <Route path="/sms" component={SmsPage} />
         <Route path="/scan" component={ScanPage} />
