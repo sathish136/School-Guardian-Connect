@@ -47,10 +47,69 @@ router.post("/sms-gateway/test", async (req, res) => {
     return;
   }
 
+  const [gateway] = await db.select().from(smsGatewayTable).limit(1);
+  if (!gateway || !gateway.isActive) {
+    res.json({ success: false, error: "SMS gateway is not configured or inactive. Save your settings first." });
+    return;
+  }
+
   try {
-    // Send a real test SMS using a dummy student ID of -1 (audit log still written)
-    const ok = await sendSms(-1, body.data.phone, "SafeRide Ops — test SMS. Your gateway is configured correctly.");
-    res.json({ success: ok });
+    if (gateway.provider === "Hutch BSMS") {
+      const username = process.env.HUTCH_SMS_USERNAME ?? gateway.apiKey;
+      const password = process.env.HUTCH_SMS_PASSWORD;
+      if (!password) {
+        res.json({ success: false, error: "HUTCH_SMS_PASSWORD secret is not set" });
+        return;
+      }
+
+      // Step 1: login
+      const loginRes = await fetch("https://bsms.hutch.lk/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-VERSION": "v1" },
+        body: JSON.stringify({ username, password }),
+      });
+      if (!loginRes.ok) {
+        const err = await loginRes.text();
+        res.json({ success: false, error: `Login failed (HTTP ${loginRes.status}): ${err}` });
+        return;
+      }
+      const loginJson = await loginRes.json() as { accessToken?: string; message?: string };
+      if (!loginJson.accessToken) {
+        res.json({ success: false, error: `Login returned no token: ${JSON.stringify(loginJson)}` });
+        return;
+      }
+
+      // Step 2: send
+      const smsRes = await fetch("https://bsms.hutch.lk/api/sendsms", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-VERSION": "v1",
+          "Authorization": `Bearer ${loginJson.accessToken}`,
+        },
+        body: JSON.stringify({
+          campaignName: username,
+          mask: gateway.senderId,
+          numbers: body.data.phone,
+          content: "SafeRide Ops — test SMS. Your Hutch BSMS gateway is working correctly.",
+        }),
+      });
+
+      if (!smsRes.ok) {
+        const err = await smsRes.text();
+        res.json({ success: false, error: `Send failed (HTTP ${smsRes.status}): ${err}` });
+        return;
+      }
+      res.json({ success: true });
+    } else {
+      // Generic gateway test
+      const response = await fetch(gateway.apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${gateway.apiKey}` },
+        body: JSON.stringify({ to: body.data.phone, from: gateway.senderId, message: "SafeRide Ops — test SMS." }),
+      });
+      res.json({ success: response.ok, error: response.ok ? undefined : `HTTP ${response.status}` });
+    }
   } catch (err) {
     res.json({ success: false, error: err instanceof Error ? err.message : "Unknown error" });
   }
