@@ -85,6 +85,9 @@ router.post("/sms-gateway/test", async (req, res) => {
         return;
       }
 
+      // Hutch requires numbers without + prefix or spaces
+      const hutchPhone = body.data.phone.replace(/^\+/, "").replace(/\s+/g, "");
+
       // Step 2: send
       const smsRes = await fetch("https://bsms.hutch.lk/api/sendsms", {
         method: "POST",
@@ -96,7 +99,7 @@ router.post("/sms-gateway/test", async (req, res) => {
         body: JSON.stringify({
           campaignName: username,
           mask: senderId,
-          numbers: body.data.phone,
+          numbers: hutchPhone,
           content: "SafeRide Ops — test SMS. Your Hutch BSMS gateway is working correctly.",
         }),
       });

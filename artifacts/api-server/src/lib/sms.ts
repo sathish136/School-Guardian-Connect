@@ -54,6 +54,9 @@ async function sendHutchSms(
     throw new Error(`Hutch BSMS login returned no token: ${JSON.stringify(loginJson)}`);
   }
 
+  // Hutch requires numbers without + prefix or spaces
+  const hutchPhone = phone.replace(/^\+/, "").replace(/\s+/g, "");
+
   // Step 2: Send SMS
   const smsRes = await fetch("https://bsms.hutch.lk/api/sendsms", {
     method: "POST",
@@ -65,7 +68,7 @@ async function sendHutchSms(
     body: JSON.stringify({
       campaignName: username,
       mask,
-      numbers: phone,
+      numbers: hutchPhone,
       content: message,
     }),
   });
