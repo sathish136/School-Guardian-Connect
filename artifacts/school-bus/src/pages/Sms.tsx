@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import {
-  useGetSmsGateway, useUpsertSmsGateway, useListSmsLogs,
+  useGetSmsGateway, useUpsertSmsGateway, useListSmsLogs, useTestSmsGateway,
   useGetWhatsappGateway, useUpsertWhatsappGateway, useTestWhatsappGateway,
   getGetSmsGatewayQueryKey, getGetWhatsappGatewayQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, CheckCircle2, XCircle, Clock, Save, Smartphone, Eye, EyeOff, Info, Send, FileText } from "lucide-react";
+import { MessageSquare, CheckCircle2, XCircle, Clock, Save, Smartphone, Eye, EyeOff, Info, Send, FileText, Zap } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
@@ -285,47 +285,136 @@ function WhatsappTab() {
   );
 }
 
+const HUTCH_DEFAULTS: SmsGatewayInput = {
+  provider: "Hutch BSMS",
+  apiUrl: "https://bsms.hutch.lk",
+  apiKey: "pradeep888@gmail.com",
+  senderId: "Live U",
+  isActive: true,
+};
+
+const isHutch = (provider: string) => provider === "Hutch BSMS";
+
 /* ─── SMS ─── */
 function SmsTab() {
   const qc = useQueryClient();
   const { data: gw } = useGetSmsGateway();
   const save = useUpsertSmsGateway();
+  const test = useTestSmsGateway();
   const [saved, setSaved] = useState(false);
   const [show, setShow] = useState(false);
-  const [form, setForm] = useState<SmsGatewayInput>({ provider: "", apiUrl: "", apiKey: "", senderId: "", isActive: true });
+  const [form, setForm] = useState<SmsGatewayInput>(HUTCH_DEFAULTS);
+  const [testPhone, setTestPhone] = useState("");
+  const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
 
   useEffect(() => {
-    if (gw) setForm({ provider: gw.provider, apiUrl: gw.apiUrl, apiKey: gw.apiKey, senderId: gw.senderId, isActive: gw.isActive });
+    if (gw) setForm({ provider: gw.provider, apiUrl: gw.apiUrl, apiKey: gw.apiKey ?? "", senderId: gw.senderId, isActive: gw.isActive });
   }, [gw]);
 
   const handleSave = () => save.mutate({ data: form }, {
     onSuccess: () => { qc.invalidateQueries({ queryKey: getGetSmsGatewayQueryKey() }); setSaved(true); setTimeout(() => setSaved(false), 2500); }
   });
 
+  const handleTest = () => {
+    setTestResult(null);
+    test.mutate({ data: { phone: testPhone } }, {
+      onSuccess: (res) => setTestResult({ success: res.success, error: res.error ?? undefined }),
+      onError: () => setTestResult({ success: false, error: "Request failed" }),
+    });
+  };
+
+  const hutch = isHutch(form.provider);
+
   return (
     <div className="space-y-4">
-      <SectionCard title="SMS Gateway" subtitle="Fallback SMS delivery when WhatsApp is inactive" icon={MessageSquare}>
+      <SectionCard title="SMS Gateway — Hutch BSMS" subtitle="Send SMS notifications to guardians via Hutch Business SMS" icon={MessageSquare}>
         <div className="px-6 py-2">
-          <FieldRow label="Provider" hint="e.g. Twilio, Vonage, Termii">
-            <Inp value={form.provider} onChange={v => setForm(p => ({ ...p, provider: v }))} placeholder="Provider name" />
+          {/* Quick-fill strip */}
+          {!hutch && (
+            <div className="py-3" style={{ borderBottom: `1px solid #F1F5F9` }}>
+              <button
+                onClick={() => setForm(HUTCH_DEFAULTS)}
+                className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold"
+                style={{ background: "#FEF3C7", color: "#92400E", border: "1px solid #FDE68A" }}
+              >
+                <Zap style={{ width: 11, height: 11 }} />
+                Pre-fill Hutch BSMS settings
+              </button>
+            </div>
+          )}
+
+          <FieldRow label="Provider" hint="SMS service provider name">
+            <Inp value={form.provider} onChange={v => setForm(p => ({ ...p, provider: v }))} placeholder="Hutch BSMS" />
           </FieldRow>
-          <FieldRow label="Sender ID" hint="Name shown to recipients">
-            <Inp value={form.senderId} onChange={v => setForm(p => ({ ...p, senderId: v }))} placeholder="SCHOOL" />
+          <FieldRow label="Base URL" hint="Gateway base URL">
+            <Inp mono value={form.apiUrl} onChange={v => setForm(p => ({ ...p, apiUrl: v }))} placeholder="https://bsms.hutch.lk" />
           </FieldRow>
-          <FieldRow label="API URL" hint="SMS gateway endpoint">
-            <Inp mono value={form.apiUrl} onChange={v => setForm(p => ({ ...p, apiUrl: v }))} placeholder="https://api.provider.com/send" />
-          </FieldRow>
-          <FieldRow label="API Key">
+          <FieldRow
+            label={hutch ? "Username" : "API Key"}
+            hint={hutch ? "Your Hutch BSMS account email" : "Authentication key"}
+          >
             <div className="relative">
-              <Inp mono type={show ? "text" : "password"} value={form.apiKey} onChange={v => setForm(p => ({ ...p, apiKey: v }))} placeholder="Your API key" />
+              <Inp mono type={show ? "text" : "password"} value={form.apiKey} onChange={v => setForm(p => ({ ...p, apiKey: v }))} placeholder={hutch ? "your@email.com" : "API key"} />
               <button type="button" onClick={() => setShow(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: MUTED }}>
                 {show ? <EyeOff style={{ width: 14, height: 14 }} /> : <Eye style={{ width: 14, height: 14 }} />}
               </button>
             </div>
+            {hutch && (
+              <p className="text-xs mt-1.5" style={{ color: MUTED }}>
+                Password is stored securely as an environment secret (<code className="font-mono text-[11px]">HUTCH_SMS_PASSWORD</code>).
+              </p>
+            )}
           </FieldRow>
-          <div className="py-4 flex items-center gap-3">
+          <FieldRow
+            label={hutch ? "Mask (Sender ID)" : "Sender ID"}
+            hint={hutch ? "Approved sender mask shown to recipients" : "Name shown to recipients"}
+          >
+            <Inp value={form.senderId} onChange={v => setForm(p => ({ ...p, senderId: v }))} placeholder={hutch ? "Live U" : "SCHOOL"} />
+          </FieldRow>
+          <div className="py-4 flex items-center gap-3" style={{ borderBottom: `1px solid #F1F5F9` }}>
             <Switch checked={form.isActive ?? true} onCheckedChange={v => setForm(p => ({ ...p, isActive: v }))} />
             <span className="text-sm" style={{ color: HEAD }}>{form.isActive ? "Active" : "Inactive"}</span>
+          </div>
+
+          {/* Test section */}
+          <div className="py-5">
+            <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: MUTED }}>Test connection</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="tel"
+                className="flex-1 h-10 px-3.5 rounded-xl text-sm outline-none transition-all"
+                style={{ border: `1px solid ${BORDER}`, background: "#fff", color: HEAD }}
+                placeholder={hutch ? "Phone with country code (e.g. 94710331717)" : "Phone with country code"}
+                value={testPhone}
+                onChange={e => { setTestPhone(e.target.value); setTestResult(null); }}
+                onFocus={e => (e.target.style.borderColor = ACCENT)}
+                onBlur={e => (e.target.style.borderColor = BORDER)}
+              />
+              <button
+                onClick={handleTest}
+                disabled={!testPhone || test.isPending}
+                className="flex items-center gap-1.5 h-10 px-4 rounded-xl text-sm font-semibold transition-opacity"
+                style={{ background: "#1E3A5F", color: "#fff", opacity: !testPhone || test.isPending ? 0.5 : 1, border: "none" }}
+              >
+                <Send style={{ width: 13, height: 13 }} />
+                {test.isPending ? "Sending…" : "Send test"}
+              </button>
+            </div>
+            {testResult && (
+              <div
+                className="mt-3 flex items-start gap-2 px-3.5 py-3 rounded-xl text-sm"
+                style={testResult.success
+                  ? { background: "#F0FDF4", border: "1px solid #BBF7D0", color: "#15803D" }
+                  : { background: "#FFF1F2", border: "1px solid #FECDD3", color: "#BE123C" }
+                }
+              >
+                {testResult.success
+                  ? <CheckCircle2 style={{ width: 15, height: 15, flexShrink: 0, marginTop: 1 }} />
+                  : <XCircle style={{ width: 15, height: 15, flexShrink: 0, marginTop: 1 }} />
+                }
+                {testResult.success ? "Test SMS sent! Check the recipient's phone." : testResult.error ?? "Failed"}
+              </div>
+            )}
           </div>
         </div>
         <div className="px-6 py-3.5 flex items-center justify-between" style={{ borderTop: `1px solid ${BORDER}`, background: "#FAFBFC" }}>

@@ -5,7 +5,9 @@ import { eq, desc } from "drizzle-orm";
 import {
   UpsertSmsGatewayBody,
   ListSmsLogsQueryParams,
+  TestSmsGatewayBody,
 } from "@workspace/api-zod";
+import { sendSms } from "../lib/sms";
 
 const router = Router();
 
@@ -36,6 +38,22 @@ router.put("/sms-gateway", async (req, res) => {
     [gateway] = await db.insert(smsGatewayTable).values(body.data).returning();
   }
   res.json({ ...gateway, updatedAt: gateway.updatedAt.toISOString() });
+});
+
+router.post("/sms-gateway/test", async (req, res) => {
+  const body = TestSmsGatewayBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: "Invalid request body" });
+    return;
+  }
+
+  try {
+    // Send a real test SMS using a dummy student ID of -1 (audit log still written)
+    const ok = await sendSms(-1, body.data.phone, "SafeRide Ops — test SMS. Your gateway is configured correctly.");
+    res.json({ success: ok });
+  } catch (err) {
+    res.json({ success: false, error: err instanceof Error ? err.message : "Unknown error" });
+  }
 });
 
 router.get("/sms-logs", async (req, res) => {

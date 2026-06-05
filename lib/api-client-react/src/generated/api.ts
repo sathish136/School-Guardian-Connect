@@ -40,6 +40,8 @@ import type {
   SmsGateway,
   SmsGatewayInput,
   SmsLog,
+  SmsTestInput,
+  SmsTestResult,
   Student,
   StudentInput,
   StudentUpdate,
@@ -2298,6 +2300,77 @@ export const useUpsertSmsGateway = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpsertSmsGatewayMutationOptions(options));
+    }
+
+export const getTestSmsGatewayUrl = () => {
+
+
+
+
+  return `/api/sms-gateway/test`
+}
+
+/**
+ * @summary Send a test SMS via the configured gateway
+ */
+export const testSmsGateway = async (smsTestInput: SmsTestInput, options?: RequestInit): Promise<SmsTestResult> => {
+
+  return customFetch<SmsTestResult>(getTestSmsGatewayUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      smsTestInput,)
+  }
+);}
+
+
+
+
+export const getTestSmsGatewayMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testSmsGateway>>, TError,{data: BodyType<SmsTestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof testSmsGateway>>, TError,{data: BodyType<SmsTestInput>}, TContext> => {
+
+const mutationKey = ['testSmsGateway'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testSmsGateway>>, {data: BodyType<SmsTestInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  testSmsGateway(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestSmsGatewayMutationResult = NonNullable<Awaited<ReturnType<typeof testSmsGateway>>>
+    export type TestSmsGatewayMutationBody = BodyType<SmsTestInput>
+    export type TestSmsGatewayMutationError = ErrorType<void>
+
+    /**
+ * @summary Send a test SMS via the configured gateway
+ */
+export const useTestSmsGateway = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testSmsGateway>>, TError,{data: BodyType<SmsTestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof testSmsGateway>>,
+        TError,
+        {data: BodyType<SmsTestInput>},
+        TContext
+      > => {
+      return useMutation(getTestSmsGatewayMutationOptions(options));
     }
 
 export const getListSmsLogsUrl = (params?: ListSmsLogsParams,) => {

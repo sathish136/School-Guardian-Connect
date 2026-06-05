@@ -26,6 +26,56 @@ async function sendWhatsapp(
   return true;
 }
 
+async function sendHutchSms(
+  username: string,
+  password: string,
+  mask: string,
+  phone: string,
+  message: string
+): Promise<void> {
+  // Step 1: Login to get access token
+  const loginRes = await fetch("https://bsms.hutch.lk/api/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-VERSION": "v1",
+    },
+    body: JSON.stringify({ username, password }),
+  });
+
+  if (!loginRes.ok) {
+    const err = await loginRes.text();
+    throw new Error(`Hutch BSMS login failed HTTP ${loginRes.status}: ${err}`);
+  }
+
+  const loginJson = await loginRes.json() as { accessToken?: string; message?: string };
+  const accessToken = loginJson.accessToken;
+  if (!accessToken) {
+    throw new Error(`Hutch BSMS login returned no token: ${JSON.stringify(loginJson)}`);
+  }
+
+  // Step 2: Send SMS
+  const smsRes = await fetch("https://bsms.hutch.lk/api/sendsms", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-VERSION": "v1",
+      "Authorization": `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      campaignName: username,
+      mask,
+      numbers: phone,
+      content: message,
+    }),
+  });
+
+  if (!smsRes.ok) {
+    const err = await smsRes.text();
+    throw new Error(`Hutch BSMS send failed HTTP ${smsRes.status}: ${err}`);
+  }
+}
+
 export async function sendSms(
   studentId: number,
   guardianPhone: string,
@@ -74,32 +124,36 @@ export async function sendSms(
   }
 
   try {
-    const response = await fetch(smsGateway.apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${smsGateway.apiKey}`,
-      },
-      body: JSON.stringify({
-        to: guardianPhone,
-        from: smsGateway.senderId,
-        message,
-      }),
-    });
-
-    if (response.ok) {
-      await db.insert(smsLogsTable).values({ studentId, guardianPhone, message, status: "sent" });
-      logger.info({ studentId, guardianPhone, channel: "sms" }, "SMS sent");
-      return true;
+    if (smsGateway.provider === "Hutch BSMS") {
+      const username = process.env.HUTCH_SMS_USERNAME ?? smsGateway.apiKey;
+      const password = process.env.HUTCH_SMS_PASSWORD;
+      if (!password) {
+        throw new Error("HUTCH_SMS_PASSWORD environment variable is not set");
+      }
+      await sendHutchSms(username, password, smsGateway.senderId, guardianPhone, message);
     } else {
-      const errorText = await response.text();
-      await db.insert(smsLogsTable).values({
-        studentId, guardianPhone, message, status: "failed",
-        errorMessage: `HTTP ${response.status}: ${errorText}`,
+      const response = await fetch(smsGateway.apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${smsGateway.apiKey}`,
+        },
+        body: JSON.stringify({
+          to: guardianPhone,
+          from: smsGateway.senderId,
+          message,
+        }),
       });
-      logger.warn({ studentId, status: response.status }, "SMS send failed");
-      return false;
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
     }
+
+    await db.insert(smsLogsTable).values({ studentId, guardianPhone, message, status: "sent" });
+    logger.info({ studentId, guardianPhone, channel: "sms", provider: smsGateway.provider }, "SMS sent");
+    return true;
   } catch (err) {
     await db.insert(smsLogsTable).values({
       studentId, guardianPhone, message, status: "failed",

@@ -598,6 +598,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/SmsGateway"
 
+  /sms-gateway/test:
+    post:
+      operationId: testSmsGateway
+      tags: [sms]
+      summary: Send a test SMS via the configured gateway
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SmsTestInput"
+      responses:
+        "200":
+          description: Test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmsTestResult"
+        "400":
+          description: Bad request
+
   /sms-logs:
     get:
       operationId: listSmsLogs
@@ -1012,6 +1033,23 @@ components:
         isActive:
           type: boolean
         updatedAt:
+          type: string
+
+    SmsTestInput:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          minLength: 1
+
+    SmsTestResult:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+        error:
           type: string
 
     WhatsappTestInput:

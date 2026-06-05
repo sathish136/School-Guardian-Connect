@@ -546,6 +546,22 @@ export const UpsertSmsGatewayResponse = zod.object({
 
 
 /**
+ * @summary Send a test SMS via the configured gateway
+ */
+
+
+
+export const TestSmsGatewayBody = zod.object({
+  "phone": zod.string().min(1)
+})
+
+export const TestSmsGatewayResponse = zod.object({
+  "success": zod.boolean(),
+  "error": zod.string().optional()
+})
+
+
+/**
  * @summary List SMS logs
  */
 export const listSmsLogsQueryLimitDefault = 50;

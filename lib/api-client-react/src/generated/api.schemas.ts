@@ -258,6 +258,16 @@ export interface WhatsappGateway {
   updatedAt: string;
 }
 
+export interface SmsTestInput {
+  /** @minLength 1 */
+  phone: string;
+}
+
+export interface SmsTestResult {
+  success: boolean;
+  error?: string;
+}
+
 export interface WhatsappTestInput {
   /** @minLength 1 */
   phone: string;

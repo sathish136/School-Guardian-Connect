@@ -32,6 +32,8 @@ export * from './smsGateway';
 export * from './smsGatewayInput';
 export * from './smsLog';
 export * from './smsLogStatus';
+export * from './smsTestInput';
+export * from './smsTestResult';
 export * from './student';
 export * from './studentInput';
 export * from './studentUpdate';
