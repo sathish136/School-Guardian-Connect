@@ -77,7 +77,7 @@ export default function ScanPage() {
         <div>
           <p className="text-sm font-semibold" style={{ color: "#92400E" }}>ZKTeco Device Setup</p>
           <p className="text-xs mt-0.5" style={{ color: "#B45309" }}>
-            On your ZKTeco device go to <strong>Communication → ADMS</strong>, set the server IP and port <strong>8082</strong>, and enable real-time push. Scans will automatically appear here when students board or alight.
+            On your ZKTeco device go to <strong>Communication → ADMS</strong>, set the server IP and port <strong>8081</strong>, and enable real-time push. Scans will automatically appear here when students board or alight.
           </p>
         </div>
       </div>

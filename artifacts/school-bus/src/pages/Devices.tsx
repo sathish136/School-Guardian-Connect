@@ -95,7 +95,7 @@ export default function Devices() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[22px] font-semibold" style={{ color: HEAD }}>Biometric Devices</h1>
-          <p className="text-[13px] mt-0.5" style={{ color: MUTED }}>ZK devices connect automatically via ADMS on port 8082</p>
+          <p className="text-[13px] mt-0.5" style={{ color: MUTED }}>ZK devices connect automatically via ADMS on port 8081</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -138,7 +138,7 @@ export default function Devices() {
       <div className="flex items-start gap-3 px-4 py-3 rounded-lg text-[13px]" style={{ background: "#FFFBEB", border: "1px solid #FDE68A" }}>
         <Info style={{ width: 14, height: 14, color: "#D97706", flexShrink: 0, marginTop: 1 }} />
         <div style={{ color: "#92400E" }}>
-          <span className="font-semibold">Setup:</span> On your ZKTeco device go to <strong>Communication → ADMS</strong>, set the server IP and port <strong>8082</strong>, enable real-time push. The device appears here automatically.
+          <span className="font-semibold">Setup:</span> On your ZKTeco device go to <strong>Communication → ADMS</strong>, set the server IP and port <strong>8081</strong>, enable real-time push. The device appears here automatically.
         </div>
       </div>
 
@@ -149,7 +149,7 @@ export default function Devices() {
         <div className="bg-white rounded-lg py-16 text-center" style={{ border: `1px solid ${BORDER}` }}>
           <WifiOff style={{ width: 32, height: 32, color: "#E4E4E7", margin: "0 auto 12px" }} />
           <p className="text-[13px] font-medium" style={{ color: "#52525B" }}>No devices connected</p>
-          <p className="text-[12px] mt-1" style={{ color: MUTED }}>Configure your ZKTeco device to point to port 8082</p>
+          <p className="text-[12px] mt-1" style={{ color: MUTED }}>Configure your ZKTeco device to point to port 8081</p>
         </div>
       ) : (
         <div className="bg-white rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>

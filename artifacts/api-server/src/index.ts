@@ -25,7 +25,7 @@ app.listen(port, (err) => {
 });
 
 // ADMS server for ZKTeco biometric devices
-const admsPort = Number(process.env["ADMS_PORT"] ?? 8082);
+const admsPort = Number(process.env["ADMS_PORT"] ?? 8081);
 adms.listen(admsPort, (err?: Error) => {
   if (err) {
     logger.error({ err }, "Error starting ADMS server");
