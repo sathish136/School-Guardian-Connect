@@ -552,7 +552,11 @@ export const UpsertSmsGatewayResponse = zod.object({
 
 
 export const TestSmsGatewayBody = zod.object({
-  "phone": zod.string().min(1)
+  "phone": zod.string().min(1),
+  "provider": zod.string().optional(),
+  "apiUrl": zod.string().optional(),
+  "apiKey": zod.string().optional(),
+  "senderId": zod.string().optional()
 })
 
 export const TestSmsGatewayResponse = zod.object({

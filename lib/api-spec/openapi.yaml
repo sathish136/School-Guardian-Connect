@@ -1042,6 +1042,14 @@ components:
         phone:
           type: string
           minLength: 1
+        provider:
+          type: string
+        apiUrl:
+          type: string
+        apiKey:
+          type: string
+        senderId:
+          type: string
 
     SmsTestResult:
       type: object

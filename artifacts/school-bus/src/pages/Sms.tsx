@@ -315,15 +315,23 @@ function SmsTab() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: getGetSmsGatewayQueryKey() }); setSaved(true); setTimeout(() => setSaved(false), 2500); }
   });
 
+  const hutch = isHutch(form.provider);
+
   const handleTest = () => {
     setTestResult(null);
-    test.mutate({ data: { phone: testPhone } }, {
+    test.mutate({
+      data: {
+        phone: testPhone,
+        provider: form.provider,
+        apiUrl: form.apiUrl,
+        apiKey: form.apiKey,
+        senderId: form.senderId,
+      }
+    }, {
       onSuccess: (res) => setTestResult({ success: res.success, error: res.error ?? undefined }),
       onError: () => setTestResult({ success: false, error: "Request failed" }),
     });
   };
-
-  const hutch = isHutch(form.provider);
 
   return (
     <div className="space-y-4">

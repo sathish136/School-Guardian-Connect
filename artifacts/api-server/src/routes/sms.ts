@@ -47,15 +47,21 @@ router.post("/sms-gateway/test", async (req, res) => {
     return;
   }
 
-  const [gateway] = await db.select().from(smsGatewayTable).limit(1);
-  if (!gateway || !gateway.isActive) {
-    res.json({ success: false, error: "SMS gateway is not configured or inactive. Save your settings first." });
+  // Use values from request body if provided, else fall back to saved DB config
+  const [saved] = await db.select().from(smsGatewayTable).limit(1);
+  const provider  = body.data.provider  ?? saved?.provider  ?? "";
+  const apiUrl    = body.data.apiUrl    ?? saved?.apiUrl    ?? "";
+  const apiKey    = body.data.apiKey    ?? saved?.apiKey    ?? "";
+  const senderId  = body.data.senderId  ?? saved?.senderId  ?? "";
+
+  if (!provider) {
+    res.json({ success: false, error: "No provider specified. Fill in the form fields first." });
     return;
   }
 
   try {
-    if (gateway.provider === "Hutch BSMS") {
-      const username = process.env.HUTCH_SMS_USERNAME ?? gateway.apiKey;
+    if (provider === "Hutch BSMS") {
+      const username = process.env.HUTCH_SMS_USERNAME ?? apiKey;
       const password = process.env.HUTCH_SMS_PASSWORD;
       if (!password) {
         res.json({ success: false, error: "HUTCH_SMS_PASSWORD secret is not set" });
@@ -89,7 +95,7 @@ router.post("/sms-gateway/test", async (req, res) => {
         },
         body: JSON.stringify({
           campaignName: username,
-          mask: gateway.senderId,
+          mask: senderId,
           numbers: body.data.phone,
           content: "SafeRide Ops — test SMS. Your Hutch BSMS gateway is working correctly.",
         }),
@@ -103,10 +109,10 @@ router.post("/sms-gateway/test", async (req, res) => {
       res.json({ success: true });
     } else {
       // Generic gateway test
-      const response = await fetch(gateway.apiUrl, {
+      const response = await fetch(apiUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${gateway.apiKey}` },
-        body: JSON.stringify({ to: body.data.phone, from: gateway.senderId, message: "SafeRide Ops — test SMS." }),
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+        body: JSON.stringify({ to: body.data.phone, from: senderId, message: "SafeRide Ops — test SMS." }),
       });
       res.json({ success: response.ok, error: response.ok ? undefined : `HTTP ${response.status}` });
     }

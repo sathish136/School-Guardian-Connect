@@ -261,6 +261,10 @@ export interface WhatsappGateway {
 export interface SmsTestInput {
   /** @minLength 1 */
   phone: string;
+  provider?: string;
+  apiUrl?: string;
+  apiKey?: string;
+  senderId?: string;
 }
 
 export interface SmsTestResult {
